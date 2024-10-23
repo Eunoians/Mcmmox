@@ -5,6 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.quest.Quest;
 import us.eunoians.mcrpg.quest.objective.QuestObjective;
 
+import java.util.UUID;
+
 public class QuestObjectiveProgressEvent extends QuestEvent {
 
     private static final HandlerList handlers = new HandlerList();
@@ -12,7 +14,7 @@ public class QuestObjectiveProgressEvent extends QuestEvent {
     private final QuestObjective objective;
     private final int progress;
 
-    public QuestObjectiveProgressEvent(@NotNull Quest quest, @NotNull QuestObjective objective, int progress) {
+    public QuestObjectiveProgressEvent(@NotNull UUID quest, @NotNull QuestObjective objective, int progress) {
         super(quest);
         assert(quest == objective.getQuest());
         this.objective = objective;

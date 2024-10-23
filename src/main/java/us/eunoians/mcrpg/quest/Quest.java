@@ -31,7 +31,7 @@ import java.util.UUID;
  */
 public class Quest implements McRPGContent {
 
-    private final UUID uuid;
+    private final UUID questUUID;
     private final String configKey;
     private final Set<QuestObjective> questObjectives;
     private boolean started = false;
@@ -40,13 +40,13 @@ public class Quest implements McRPGContent {
     private QuestReward questReward;
 
     public Quest(@NotNull String configKey) {
-        this.uuid = UUID.randomUUID();
+        this.questUUID = UUID.randomUUID();
         this.configKey = configKey;
         this.questObjectives = new HashSet<>();
     }
 
-    public Quest(@NotNull UUID uuid, @NotNull String configKey, @NotNull Set<QuestObjective> questObjectives) {
-        this.uuid = uuid;
+    public Quest(@NotNull UUID questUUID, @NotNull String configKey, @NotNull Set<QuestObjective> questObjectives) {
+        this.questUUID = questUUID;
         this.configKey = configKey;
         this.questObjectives = questObjectives;
     }
@@ -58,7 +58,7 @@ public class Quest implements McRPGContent {
      */
     @NotNull
     public UUID getUUID() {
-        return uuid;
+        return questUUID;
     }
 
     /**
@@ -93,7 +93,7 @@ public class Quest implements McRPGContent {
     /**
      * Adds the provided {@link QuestHolder} as someone who is working on this quest
      *
-     * @param questHolder The {@link QuestHolder} to add to this quyest
+     * @param questHolder The {@link QuestHolder} to add to this quest
      */
     public void addQuestHolder(@NotNull QuestHolder questHolder) {
         addQuestHolder(questHolder.getUUID());
@@ -165,7 +165,7 @@ public class Quest implements McRPGContent {
     public void onObjectiveComplete(@NotNull QuestObjective questObjective) {
         // Validate that this objective belongs to this quest
         if (!questObjectives.contains(questObjective)) {
-            throw new QuestMissingObjectiveException(this, questObjective, String.format("Quest objective was marked as complete but doesn't belong to quest with UUID %s", uuid));
+            throw new QuestMissingObjectiveException(this, questObjective, String.format("Quest objective was marked as complete but doesn't belong to quest with UUID %s", questUUID));
         }
         // If all objectives are finished, then the quest is complete
         for (QuestObjective objective : questObjectives) {

@@ -14,7 +14,7 @@ import us.eunoians.mcrpg.entity.holder.SkillHolder;
 import java.util.UUID;
 
 /**
- * A placeholder quest reward that is ran whenever a player finishes their upgrade quest for a given ability
+ * A placeholder quest reward that is run whenever a player finishes their upgrade quest for a given ability
  */
 public class UpgradeQuestReward implements QuestReward {
 
