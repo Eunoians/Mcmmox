@@ -1,5 +1,7 @@
 package us.eunoians.mcrpg.listener.skill;
 
+import com.diamonddagger590.mccore.database.Database;
+import com.diamonddagger590.mccore.database.transaction.FailsafeTransaction;
 import com.diamonddagger590.mccore.player.PlayerManager;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -16,15 +18,17 @@ import us.eunoians.mcrpg.ability.attribute.AbilityAttributeManager;
 import us.eunoians.mcrpg.ability.attribute.AbilityUnlockedAttribute;
 import us.eunoians.mcrpg.ability.impl.Ability;
 import us.eunoians.mcrpg.ability.impl.UnlockableAbility;
+import us.eunoians.mcrpg.database.table.SkillDAO;
+import us.eunoians.mcrpg.entity.holder.SkillHolder;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
 import us.eunoians.mcrpg.event.ability.AbilityUnlockEvent;
 import us.eunoians.mcrpg.event.skill.PostSkillGainExpEvent;
 import us.eunoians.mcrpg.event.skill.PostSkillGainLevelEvent;
 import us.eunoians.mcrpg.event.skill.SkillGainLevelEvent;
-import us.eunoians.mcrpg.database.table.SkillDAO;
-import us.eunoians.mcrpg.entity.holder.SkillHolder;
 import us.eunoians.mcrpg.skill.Skill;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -77,10 +81,16 @@ public class OnSkillLevelUpListener implements Listener {
                                 AbilityUnlockEvent abilityUnlockEvent = new AbilityUnlockEvent(skillHolder, unlockableAbility);
                                 Bukkit.getPluginManager().callEvent(abilityUnlockEvent);
                                 abilityData.updateAttribute(attribute, true);
+
                                 //Save the updated attribute
-                                SkillDAO.savePlayerSkillData(McRPG.getInstance().getDatabaseManager().getDatabase().getConnection(), skillHolder).exceptionally(throwable -> {
-                                    throwable.printStackTrace();
-                                    return null;
+                                Database database = McRPG.getInstance().getDatabase();
+                                database.getDatabaseExecutorService().submit(() -> {
+                                    try (Connection connection = database.getConnection()) {
+                                        new FailsafeTransaction(connection, SkillDAO.savePlayerSkillData(connection, skillHolder)).executeTransaction();
+                                    }
+                                    catch (SQLException e) {
+                                        e.printStackTrace();
+                                    }
                                 });
                             }
                         }
