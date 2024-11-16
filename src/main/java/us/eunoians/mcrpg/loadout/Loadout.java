@@ -13,6 +13,7 @@ import us.eunoians.mcrpg.configuration.FileType;
 import us.eunoians.mcrpg.configuration.file.MainConfigFile;
 import us.eunoians.mcrpg.exception.loadout.LoadoutAlreadyHasActiveAbilityException;
 import us.eunoians.mcrpg.exception.loadout.LoadoutMaxSizeExceededException;
+import us.eunoians.mcrpg.util.McRPGMethods;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -29,7 +30,6 @@ import java.util.UUID;
  */
 public final class Loadout {
 
-    private final McRPG plugin;
     private final UUID loadoutHolder;
     private final int loadoutSlot;
     private final Set<NamespacedKey> abilities;
@@ -38,8 +38,7 @@ public final class Loadout {
     @NotNull
     private LoadoutDisplay loadoutDisplay;
 
-    public Loadout(@NotNull McRPG mcRPG, @NotNull UUID loadoutHolder, int loadoutSlot) {
-        this.plugin = mcRPG;
+    public Loadout(@NotNull UUID loadoutHolder, int loadoutSlot) {
         this.loadoutHolder = loadoutHolder;
         this.loadoutSlot = loadoutSlot;
         this.abilities = new HashSet<>();
@@ -47,8 +46,7 @@ public final class Loadout {
         this.loadoutDisplay = getDefaultDisplayItem();
     }
 
-    public Loadout(@NotNull McRPG plugin, @NotNull UUID loadoutHolder, int loadoutSlot, @NotNull Set<NamespacedKey> abilities) {
-        this.plugin = plugin;
+    public Loadout(@NotNull UUID loadoutHolder, int loadoutSlot, @NotNull Set<NamespacedKey> abilities) {
         this.loadoutHolder = loadoutHolder;
         this.loadoutSlot = loadoutSlot;
         this.abilities = abilities;
@@ -56,8 +54,7 @@ public final class Loadout {
         this.loadoutDisplay = getDefaultDisplayItem();
     }
 
-    public Loadout(@NotNull McRPG plugin, @NotNull UUID loadoutHolder, int loadoutSlot, @NotNull Set<NamespacedKey> abilities, @NotNull LoadoutDisplay loadoutDisplay) {
-        this.plugin = plugin;
+    public Loadout(@NotNull UUID loadoutHolder, int loadoutSlot, @NotNull Set<NamespacedKey> abilities, @NotNull LoadoutDisplay loadoutDisplay) {
         this.loadoutHolder = loadoutHolder;
         this.loadoutSlot = loadoutSlot;
         this.abilities = abilities;
@@ -192,7 +189,7 @@ public final class Loadout {
      */
     @NotNull
     public Loadout copyLoadout(@NotNull UUID loadoutHolder, int loadoutSlot) {
-        return new Loadout(plugin, loadoutHolder, loadoutSlot, new HashSet<>(abilities));
+        return new Loadout(loadoutHolder, loadoutSlot, new HashSet<>(abilities));
     }
 
     @NotNull
@@ -218,7 +215,7 @@ public final class Loadout {
     }
 
     private LoadoutDisplay getDefaultDisplayItem() {
-        return new LoadoutDisplay(Material.CHERRY_SIGN, null, plugin.getMiniMessage().deserialize("<gray>Loadout <gold>" + getLoadoutSlot()));
+        return new LoadoutDisplay(Material.CHERRY_SIGN, null, McRPGMethods.translate("<gray>Loadout <gold>" + getLoadoutSlot()));
     }
 
 }

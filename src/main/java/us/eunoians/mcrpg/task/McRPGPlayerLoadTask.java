@@ -13,7 +13,7 @@ import us.eunoians.mcrpg.ability.attribute.AbilityAttributeManager;
 import us.eunoians.mcrpg.ability.impl.Ability;
 import us.eunoians.mcrpg.configuration.FileType;
 import us.eunoians.mcrpg.configuration.file.MainConfigFile;
-import us.eunoians.mcrpg.database.table.PlayerLoadoutDAO;
+import us.eunoians.mcrpg.database.table.LoadoutDAO;
 import us.eunoians.mcrpg.database.table.PlayerSettingDAO;
 import us.eunoians.mcrpg.database.table.SkillDAO;
 import us.eunoians.mcrpg.database.table.SkillDataSnapshot;
@@ -90,7 +90,7 @@ public class McRPGPlayerLoadTask extends PlayerLoadTask {
             // Loadouts
             int loadoutAmount = McRPG.getInstance().getFileManager().getFile(FileType.MAIN_CONFIG).getInt(MainConfigFile.MAX_LOADOUT_AMOUNT);
             for (int x = 1; x <= loadoutAmount; x++) {
-                Loadout loadout = PlayerLoadoutDAO.getPlayerLoadout(connection, uuid, x);
+                Loadout loadout = LoadoutDAO.getLoadout(connection, uuid, x);
                 skillHolder.setLoadout(loadout);
             }
 

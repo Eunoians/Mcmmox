@@ -32,7 +32,7 @@ import us.eunoians.mcrpg.command.quest.TestQuestStartCommand;
 import us.eunoians.mcrpg.configuration.FileManager;
 import us.eunoians.mcrpg.database.McRPGDatabase;
 import us.eunoians.mcrpg.database.driver.McRPGSqliteDriver;
-import us.eunoians.mcrpg.database.table.PlayerLoadoutDAO;
+import us.eunoians.mcrpg.database.table.LoadoutInfoDAO;
 import us.eunoians.mcrpg.database.table.SkillDAO;
 import us.eunoians.mcrpg.display.DisplayManager;
 import us.eunoians.mcrpg.entity.EntityManager;
@@ -160,7 +160,7 @@ public class McRPG extends CorePlugin {
                     if (corePlayer instanceof McRPGPlayer mcRPGPlayer) {
                         // TODO make this one thing so it isnt in two spots
                         SkillDAO.savePlayerSkillData(connection, mcRPGPlayer.asSkillHolder());
-                        PlayerLoadoutDAO.saveAllPlayerLoadouts(connection, mcRPGPlayer.asSkillHolder());
+                        LoadoutInfoDAO.saveAllLoadoutInfo(connection, mcRPGPlayer.asSkillHolder());
                         if (isLunarEnabled()) {
                             LunarUtils.clearCooldowns(mcRPGPlayer.getUUID());
                         }

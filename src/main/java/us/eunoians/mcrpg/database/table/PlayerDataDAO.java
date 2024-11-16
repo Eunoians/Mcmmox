@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class PlayerDataDAO {
 
-    private static final String TABLE_NAME = "mcrpg_player_data";
+    static final String TABLE_NAME = "mcrpg_player_data";
     private static final int CURRENT_TABLE_VERSION = 1;
 
     /**

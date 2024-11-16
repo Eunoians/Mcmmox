@@ -92,7 +92,7 @@ public class LoadoutHolder extends AbilityHolder {
             throw new SelectedLoadoutAboveMaxException(this, loadoutSlot);
         }
         if (!loadouts.containsKey(loadoutSlot)) {
-            loadouts.put(loadoutSlot, new Loadout(getPlugin(), getUUID(), loadoutSlot));
+            loadouts.put(loadoutSlot, new Loadout(getUUID(), loadoutSlot));
         }
         return loadouts.get(loadoutSlot);
     }
