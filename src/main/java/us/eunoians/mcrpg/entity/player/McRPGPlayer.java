@@ -40,7 +40,7 @@ public class McRPGPlayer extends CorePlayer {
     public McRPGPlayer(@NotNull Player player, @NotNull McRPG mcRPG) {
         super(player.getUniqueId());
         this.mcRPG = mcRPG;
-        skillHolder = new SkillHolder(getUUID());
+        skillHolder = new SkillHolder(mcRPG, getUUID());
         questHolder = new QuestHolder(getUUID());
         playerSettings = new HashMap<>();
     }
@@ -48,7 +48,7 @@ public class McRPGPlayer extends CorePlayer {
     public McRPGPlayer(@NotNull UUID uuid, @NotNull McRPG mcRPG) {
         super(uuid);
         this.mcRPG = mcRPG;
-        skillHolder = new SkillHolder(getUUID());
+        skillHolder = new SkillHolder(mcRPG, getUUID());
         questHolder = new QuestHolder(getUUID());
         playerSettings = new HashMap<>();
     }

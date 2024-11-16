@@ -1,8 +1,10 @@
 package us.eunoians.mcrpg.loadout;
 
 import com.google.common.collect.ImmutableSet;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.ability.impl.Ability;
 import us.eunoians.mcrpg.ability.impl.ActiveAbility;
@@ -25,22 +27,41 @@ import java.util.UUID;
  * <p>
  * A loadout also has a restriction where it can only possess one {@link ActiveAbility} per {@link us.eunoians.mcrpg.skill.Skill}.
  */
-public class Loadout {
+public final class Loadout {
 
+    private final McRPG plugin;
     private final UUID loadoutHolder;
     private final int loadoutSlot;
     private final Set<NamespacedKey> abilities;
+    @Nullable
+    private String loadoutName;
+    @NotNull
+    private LoadoutDisplay loadoutDisplay;
 
-    public Loadout(@NotNull UUID loadoutHolder, int loadoutSlot) {
+    public Loadout(@NotNull McRPG mcRPG, @NotNull UUID loadoutHolder, int loadoutSlot) {
+        this.plugin = mcRPG;
         this.loadoutHolder = loadoutHolder;
         this.loadoutSlot = loadoutSlot;
         this.abilities = new HashSet<>();
+        this.loadoutName = null;
+        this.loadoutDisplay = getDefaultDisplayItem();
     }
 
-    public Loadout(@NotNull UUID loadoutHolder, int loadoutSlot, @NotNull Set<NamespacedKey> abilities) {
+    public Loadout(@NotNull McRPG plugin, @NotNull UUID loadoutHolder, int loadoutSlot, @NotNull Set<NamespacedKey> abilities) {
+        this.plugin = plugin;
         this.loadoutHolder = loadoutHolder;
         this.loadoutSlot = loadoutSlot;
         this.abilities = abilities;
+        this.loadoutName = null;
+        this.loadoutDisplay = getDefaultDisplayItem();
+    }
+
+    public Loadout(@NotNull McRPG plugin, @NotNull UUID loadoutHolder, int loadoutSlot, @NotNull Set<NamespacedKey> abilities, @NotNull LoadoutDisplay loadoutDisplay) {
+        this.plugin = plugin;
+        this.loadoutHolder = loadoutHolder;
+        this.loadoutSlot = loadoutSlot;
+        this.abilities = abilities;
+        this.loadoutDisplay = loadoutDisplay;
     }
 
     /**
@@ -171,7 +192,20 @@ public class Loadout {
      */
     @NotNull
     public Loadout copyLoadout(@NotNull UUID loadoutHolder, int loadoutSlot) {
-        return new Loadout(loadoutHolder, loadoutSlot, new HashSet<>(abilities));
+        return new Loadout(plugin, loadoutHolder, loadoutSlot, new HashSet<>(abilities));
+    }
+
+    @NotNull
+    public LoadoutDisplay getDisplay() {
+        return loadoutDisplay;
+    }
+
+    public void setLoadoutDisplay(@NotNull LoadoutDisplay loadoutDisplay) {
+        this.loadoutDisplay = loadoutDisplay;
+    }
+
+    public boolean shouldSaveLoadout() {
+        return loadoutDisplay.equals(getDefaultDisplayItem());
     }
 
     /**
@@ -182,4 +216,9 @@ public class Loadout {
     private int getMaxLoadoutSize() {
         return McRPG.getInstance().getFileManager().getFile(FileType.MAIN_CONFIG).getInt(MainConfigFile.MAX_LOADOUT_SIZE);
     }
+
+    private LoadoutDisplay getDefaultDisplayItem() {
+        return new LoadoutDisplay(Material.CHERRY_SIGN, null, plugin.getMiniMessage().deserialize("<gray>Loadout <gold>" + getLoadoutSlot()));
+    }
+
 }

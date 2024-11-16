@@ -26,21 +26,21 @@ import java.util.stream.Collectors;
  * A loadout can only hold {@link UnlockableAbility UnlockableAbilities},
  * so it should only be treated as a representation of all unlocked abilities that a holder can use.
  * <p>
- * To get ALL abilities a holder can use (including 'default abilities'), use {@link #getAvailableAbilitiesToUse()}.
+ * To get ALL abilities a holder can use (including 'innate abilities'), use {@link #getAvailableAbilitiesToUse()}.
  */
 public class LoadoutHolder extends AbilityHolder {
 
     private final Map<Integer, Loadout> loadouts;
     private int currentLoadout;
 
-    public LoadoutHolder(@NotNull UUID uuid) {
-        super(uuid);
+    public LoadoutHolder(@NotNull McRPG mcRPG, @NotNull UUID uuid) {
+        super(mcRPG, uuid);
         this.loadouts = new HashMap<>();
         this.currentLoadout = 1;
     }
 
-    public LoadoutHolder(@NotNull UUID uuid, int currentLoadout, Map<Integer, Loadout> loadouts) {
-        super(uuid);
+    public LoadoutHolder(@NotNull McRPG mcRPG, @NotNull UUID uuid, int currentLoadout, Map<Integer, Loadout> loadouts) {
+        super(mcRPG, uuid);
         this.currentLoadout = currentLoadout;
         this.loadouts = loadouts;
     }
@@ -92,7 +92,7 @@ public class LoadoutHolder extends AbilityHolder {
             throw new SelectedLoadoutAboveMaxException(this, loadoutSlot);
         }
         if (!loadouts.containsKey(loadoutSlot)) {
-            loadouts.put(loadoutSlot, new Loadout(getUUID(), loadoutSlot));
+            loadouts.put(loadoutSlot, new Loadout(getPlugin(), getUUID(), loadoutSlot));
         }
         return loadouts.get(loadoutSlot);
     }

@@ -1,6 +1,9 @@
 package us.eunoians.mcrpg.database.table;
 
 import com.diamonddagger590.mccore.database.table.impl.TableVersionHistoryDAO;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
@@ -10,12 +13,14 @@ import us.eunoians.mcrpg.configuration.file.MainConfigFile;
 import us.eunoians.mcrpg.database.McRPGDatabaseManager;
 import us.eunoians.mcrpg.entity.holder.LoadoutHolder;
 import us.eunoians.mcrpg.loadout.Loadout;
+import us.eunoians.mcrpg.loadout.LoadoutDisplay;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -28,6 +33,7 @@ public class PlayerLoadoutDAO {
     private static final String LEGACY_LOADOUT_TABLE_NAME = "mcrpg_loadout";
     private static final String LOADOUT_TABLE_NAME = "mcrpg_loadout_info";
     private static final String LOADOUT_SLOTS_TABLE_NAME = "mcrpg_loadout_slots";
+    private static final String LOADOUT_DISPLAY_TABLE_NAME = "mcrpg_loadout_display";
     private static final int CURRENT_TABLE_VERSION = 1;
 
     private static boolean isAcceptingQueries = true;
@@ -49,9 +55,10 @@ public class PlayerLoadoutDAO {
 
             boolean loadoutTableExists = databaseManager.getDatabase().tableExists(LOADOUT_TABLE_NAME);
             boolean loadoutSlotsTableExists = databaseManager.getDatabase().tableExists(LOADOUT_SLOTS_TABLE_NAME);
+            boolean displayTableExists = databaseManager.getDatabase().tableExists(LOADOUT_DISPLAY_TABLE_NAME);
 
             //Check to see if the table already exists
-            if (loadoutTableExists && loadoutSlotsTableExists) {
+            if (loadoutTableExists && loadoutSlotsTableExists && displayTableExists) {
                 completableFuture.complete(false);
                 return;
             }
@@ -110,6 +117,39 @@ public class PlayerLoadoutDAO {
                         "`player_uuid` varchar(36) NOT NULL," +
                         "`ability_id` varchar(32) NOT NULL," +
                         "PRIMARY KEY (`loadout_id`, `ability_id`, `player_uuid`), " +
+                        "CONSTRAINT FK_loadout FOREIGN KEY (`player_uuid`) REFERENCES " + LOADOUT_TABLE_NAME + "(`player_uuid`)" +
+                        ");")) {
+                    statement.executeUpdate();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    completableFuture.completeExceptionally(e);
+                }
+            }
+
+            if (!displayTableExists) {
+                /*****
+                 ** Table Description:
+                 ** Contains player loadout slots
+                 *
+                 *
+                 * loadout_id is the slot of the player's loadout the data belongs to
+                 * player_uuid is an integer representing the slot in the loadout that the ability is stored in
+                 * ability_id is the ability id that is used to find the corresponding {@link UnlockedAbilities} value
+                 **
+                 ** Reasoning for structure:
+                 ** PK is the composite of `loadout_id` field, `slot_number` and `player_uuid`, as a loadout id will be present once for each ability in the loadout,
+                 * so the combination of that and the slot number will be used to look up individual abilities and each player uuid is unique.
+                 *
+                 * The foreign key requires the player's uuid to be present in the loadout table as that's where the player's loadout info is stored
+                 *****/
+                try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE `" + LOADOUT_DISPLAY_TABLE_NAME + "`" +
+                        "(" +
+                        "`loadout_id` int(11) NOT NULL," +
+                        "`player_uuid` varchar(36) NOT NULL," +
+                        "`material` varchar(32) NOT NULL," +
+                        "`custom_model_data` int(11) NULL," +
+                        "`display_name` varchar(32) NULL," +
+                        "PRIMARY KEY (`loadout_id`, `player_uuid`), " +
                         "CONSTRAINT FK_loadout FOREIGN KEY (`player_uuid`) REFERENCES " + LOADOUT_TABLE_NAME + "(`player_uuid`)" +
                         ");")) {
                     statement.executeUpdate();
@@ -209,14 +249,14 @@ public class PlayerLoadoutDAO {
      */
     @NotNull
     public static CompletableFuture<Loadout> getPlayerLoadout(@NotNull Connection connection, @NotNull UUID playerUUID, int loadoutNumber) {
-
         McRPGDatabaseManager databaseManager = McRPG.getInstance().getDatabaseManager();
         AbilityRegistry abilityRegistry = McRPG.getInstance().getAbilityRegistry();
         CompletableFuture<Loadout> completableFuture = new CompletableFuture<>();
 
         databaseManager.getDatabaseExecutorService().submit(() -> {
-
-            Loadout loadout = new Loadout(playerUUID, loadoutNumber);
+            // Start the get for the loadout display
+            var loadoutDisplayOptional = getLoadoutDisplay(connection, playerUUID, loadoutNumber);
+            Loadout loadout = new Loadout(McRPG.getInstance(), playerUUID, loadoutNumber);
             try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT ability_id FROM " + LOADOUT_SLOTS_TABLE_NAME + " WHERE player_uuid = ? AND loadout_id = ?;")) {
 
                 preparedStatement.setString(1, playerUUID.toString());
@@ -231,7 +271,9 @@ public class PlayerLoadoutDAO {
                         }
                     }
                 }
-            } catch (SQLException e) {
+                // Update the loadout display
+                loadoutDisplayOptional.get().ifPresent(loadout::setLoadoutDisplay);
+            } catch (SQLException | ExecutionException | InterruptedException e) {
                 completableFuture.completeExceptionally(e);
             }
             completableFuture.complete(loadout);
@@ -240,12 +282,52 @@ public class PlayerLoadoutDAO {
         return completableFuture;
     }
 
+    @NotNull
+    public static CompletableFuture<Optional<LoadoutDisplay>> getLoadoutDisplay(@NotNull Connection connection, @NotNull UUID playerUUID, int loadoutNumber) {
+        McRPGDatabaseManager databaseManager = McRPG.getInstance().getDatabaseManager();
+        CompletableFuture<Optional<LoadoutDisplay>> completableFuture = new CompletableFuture<>();
+        MiniMessage miniMessage = McRPG.getInstance().getMiniMessage();
+        databaseManager.getDatabaseExecutorService().submit(() -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT material, custom_model_data, display_name FROM " + LOADOUT_DISPLAY_TABLE_NAME + " WHERE player_uuid = ? AND loadout_id = ?;")) {
+                preparedStatement.setString(1, playerUUID.toString());
+                preparedStatement.setInt(2, loadoutNumber);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        String materialName = resultSet.getString("material");
+                        Material material = Material.getMaterial(materialName);
+                        int customModelData = resultSet.getInt("custom_model_data");
+                        String displayName = resultSet.getString("display_name");
+                        Component displayNameComponent = displayName == null ? null : miniMessage.deserialize(displayName);
+                        // Handles any weird name change things in case we have another flattening
+                        if (material == null) {
+                            completableFuture.completeExceptionally(new RuntimeException(String.format("Material %s is not a valid display item for a loadout.", materialName)));
+                            return;
+                        }
+                        // Create the loadout display and return it
+                        completableFuture.complete(Optional.of(new LoadoutDisplay(material, customModelData == 0 ? null : customModelData, displayNameComponent)));
+                    }
+                }
+            } catch (SQLException e) {
+                completableFuture.completeExceptionally(e);
+            }
+            // Otherwise return an empty optional
+            completableFuture.complete(Optional.empty());
+        });
+        return completableFuture;
+    }
+
     public static CompletableFuture<Void> saveAllPlayerLoadouts(@NotNull Connection connection, @NotNull LoadoutHolder loadoutHolder) {
         UUID uuid = loadoutHolder.getUUID();
         int loadoutAmount = McRPG.getInstance().getFileManager().getFile(FileType.MAIN_CONFIG).getInt(MainConfigFile.MAX_LOADOUT_AMOUNT);
         CompletableFuture[] futures = new CompletableFuture[loadoutAmount];
-        for (int i = 1; i <= loadoutAmount; i++) {
-            futures[i - 1] = savePlayerLoadout(connection, uuid, loadoutHolder.getLoadout(i));
+        try {
+            connection.setAutoCommit(false);
+            for (int i = 1; i <= loadoutAmount; i++) {
+                futures[i - 1] = savePlayerLoadout(connection, uuid, loadoutHolder.getLoadout(i));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
         CompletableFuture<Void> allFuture = CompletableFuture.allOf(futures);
         return allFuture;
@@ -287,6 +369,26 @@ public class PlayerLoadoutDAO {
                 completableFuture.completeExceptionally(e);
             }
             completableFuture.complete(null);
+        });
+
+        return completableFuture;
+    }
+
+    @NotNull
+    public static CompletableFuture<Void> savePlayerLoadoutDisplay(@NotNull Connection connection, @NotNull UUID playerUUID, int loadoutID, @NotNull LoadoutDisplay loadoutDisplay) {
+        McRPGDatabaseManager databaseManager = McRPG.getInstance().getDatabaseManager();
+        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+        databaseManager.getDatabaseExecutorService().submit(() -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + LOADOUT_DISPLAY_TABLE_NAME + " (player_uuid, loadout_id, material, custom_model_data, display_name) VALUES (?, ?, ?, ?, ?);")) {
+                preparedStatement.setString(1, playerUUID.toString());
+                preparedStatement.setInt(2, loadoutID);
+                preparedStatement.setString(3, loadoutDisplay.getDisplayItem().getType().name());
+                preparedStatement.setInt(4, loadoutDisplay.getCustomModelData().isEmpty() ? 0 : loadoutDisplay.getCustomModelData().get());
+                preparedStatement.setString(5, loadoutDisplay.getDisplayName().isEmpty() ? null : loadoutDisplay.getDisplayName().get().toString());
+                preparedStatement.executeUpdate();
+            } catch (SQLException e) {
+                completableFuture.completeExceptionally(e);
+            }
         });
 
         return completableFuture;

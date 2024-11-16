@@ -3,6 +3,7 @@ package us.eunoians.mcrpg.entity.holder;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
+import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.ability.impl.Ability;
 import us.eunoians.mcrpg.event.skill.PostSkillGainExpEvent;
 import us.eunoians.mcrpg.event.skill.PostSkillGainLevelEvent;
@@ -29,8 +30,8 @@ public class SkillHolder extends LoadoutHolder {
 
     private final Map<NamespacedKey, SkillHolderData> skillData;
 
-    public SkillHolder(@NotNull UUID uuid) {
-        super(uuid);
+    public SkillHolder(@NotNull McRPG mcRPG, @NotNull UUID uuid) {
+        super(mcRPG, uuid);
         this.skillData = new HashMap<>();
     }
 

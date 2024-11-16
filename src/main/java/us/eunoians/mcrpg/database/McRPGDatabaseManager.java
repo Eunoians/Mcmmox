@@ -27,19 +27,14 @@ public class McRPGDatabaseManager extends DatabaseManager {
 
     private final DatabaseDriver driver;
     private final DatabaseInitializationFunction databaseInitializationFunction = (driver) -> {
-
         DatabaseBuilder dbBuilder = new McRPGDatabaseBuilder(driver);
-
         File databaseFolder = new File(plugin.getDataFolder().getPath() + File.separator + "database");
-
         if (!databaseFolder.exists()) {
             databaseFolder.mkdir();
         }
 
         dbBuilder.setPath(databaseFolder.getPath() + File.separator + "mcrpg");
-
         Optional<Database> initializedDatabase = Optional.empty();
-
         try {
             initializedDatabase = Optional.of(dbBuilder.build());
         } catch (SQLException e) {
@@ -67,21 +62,16 @@ public class McRPGDatabaseManager extends DatabaseManager {
      * Adds the required {@link com.diamonddagger590.mccore.database.function.CreateTableFunction CreateTableFunctions} for McRPG to properly run.
      */
     private void populateCreateFunctions() {
-
         addCreateTableFunction((databaseManager) -> {
-
             CompletableFuture<Void> tableCreationFuture = new CompletableFuture<>();
             Database database = databaseManager.getDatabase();
-
             if (database == null) {
                 tableCreationFuture.completeExceptionally(new CoreDatabaseInitializationException("The database for McRPG is null, please report this to the plugin developer."));
                 return tableCreationFuture;
             }
 
             Connection connection = databaseManager.getDatabase().getConnection();
-
             getDatabaseExecutorService().submit(() -> {
-
                 CompletableFuture.allOf(SkillDAO.attemptCreateTable(connection, this),
                                 PlayerLoadoutDAO.attemptCreateTable(connection, this), PlayerDataDAO.attemptCreateTable(connection, this),
                                 PlayerSettingDAO.attemptCreateTable(connection, this))
@@ -92,7 +82,6 @@ public class McRPGDatabaseManager extends DatabaseManager {
                         });
 
             });
-
             return tableCreationFuture;
         });
     }
@@ -101,25 +90,20 @@ public class McRPGDatabaseManager extends DatabaseManager {
      * Adds the required {@link com.diamonddagger590.mccore.database.function.UpdateTableFunction UpdateTableFunctions} for McRPG to properly run.
      */
     private void populateUpdateFunctions() {
-
         addUpdateTableFunction((databaseManager -> {
-
             CompletableFuture<Void> tableUpdateFuture = new CompletableFuture<>();
             Database database = databaseManager.getDatabase();
-
             if (database == null) {
                 tableUpdateFuture.completeExceptionally(new CoreDatabaseInitializationException("The database for McRPG is null, please report this to the plugin developer."));
                 return tableUpdateFuture;
             }
 
             Connection connection = databaseManager.getDatabase().getConnection();
-
             getDatabaseExecutorService().submit(() -> {
                 CompletableFuture.allOf(SkillDAO.updateTable(connection), PlayerLoadoutDAO.updateTable(connection),
                         PlayerDataDAO.updateTable(connection), PlayerSettingDAO.updateTable(connection))
                     .thenAccept(tableUpdateFuture::complete);
             });
-
             return tableUpdateFuture;
         }));
     }

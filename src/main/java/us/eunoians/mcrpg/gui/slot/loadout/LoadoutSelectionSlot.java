@@ -7,7 +7,6 @@ import com.diamonddagger590.mccore.gui.slot.Slot;
 import com.diamonddagger590.mccore.player.CorePlayer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -21,6 +20,7 @@ import us.eunoians.mcrpg.entity.player.McRPGPlayer;
 import us.eunoians.mcrpg.gui.loadout.LoadoutGui;
 import us.eunoians.mcrpg.gui.loadout.LoadoutSelectionGui;
 import us.eunoians.mcrpg.loadout.Loadout;
+import us.eunoians.mcrpg.loadout.LoadoutDisplay;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,8 +54,7 @@ public class LoadoutSelectionSlot extends Slot {
                 LoadoutGui loadoutGui = new LoadoutGui(mcRPGPlayer, loadout);
                 McRPG.getInstance().getGuiTracker().trackPlayerGui(mcRPGPlayer, loadoutGui);
                 player.openInventory(loadoutGui.getInventory());
-            }
-            else {
+            } else {
                 player.performCommand("loadout set " + loadout.getLoadoutSlot());
                 gui.refreshGUI();
             }
@@ -67,14 +66,13 @@ public class LoadoutSelectionSlot extends Slot {
     @Override
     public ItemStack getItem() {
         MiniMessage miniMessage = McRPG.getInstance().getMiniMessage();
-        ItemStack itemStack = new ItemStack(Material.CHERRY_SIGN);
+        LoadoutDisplay loadoutDisplay = loadout.getDisplay();
+        ItemStack itemStack = loadoutDisplay.getDisplayItem();
         ItemMeta itemMeta = itemStack.getItemMeta();
-        itemMeta.displayName(miniMessage.deserialize("<gray>Loadout <gold>" + loadout.getLoadoutSlot()));
         List<Component> lore = new ArrayList<>();
         if (isPlayerOnGeyser() || isLoadoutActive()) {
             lore.add(miniMessage.deserialize("<gray>Click to edit this loadout."));
-        }
-        else {
+        } else {
             lore.add(miniMessage.deserialize("<gray>Left click to edit this loadout."));
             lore.add(miniMessage.deserialize("<gray>Right click to set this loadout as active."));
         }
