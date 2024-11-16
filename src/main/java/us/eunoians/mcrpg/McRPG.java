@@ -3,6 +3,7 @@ package us.eunoians.mcrpg;
 import com.diamonddagger590.mccore.CorePlugin;
 import com.diamonddagger590.mccore.command.DisplayNameCommand;
 import com.diamonddagger590.mccore.command.LoreCommand;
+import com.diamonddagger590.mccore.database.driver.DatabaseDriverType;
 import com.diamonddagger590.mccore.database.table.impl.MutexDAO;
 import com.diamonddagger590.mccore.player.CorePlayer;
 import com.diamonddagger590.mccore.player.PlayerManager;
@@ -29,7 +30,8 @@ import us.eunoians.mcrpg.command.loadout.LoadoutEditCommand;
 import us.eunoians.mcrpg.command.loadout.LoadoutSetCommand;
 import us.eunoians.mcrpg.command.quest.TestQuestStartCommand;
 import us.eunoians.mcrpg.configuration.FileManager;
-import us.eunoians.mcrpg.database.McRPGDatabaseManager;
+import us.eunoians.mcrpg.database.McRPGDatabase;
+import us.eunoians.mcrpg.database.driver.McRPGSqliteDriver;
 import us.eunoians.mcrpg.database.table.PlayerLoadoutDAO;
 import us.eunoians.mcrpg.database.table.SkillDAO;
 import us.eunoians.mcrpg.display.DisplayManager;
@@ -54,12 +56,13 @@ import us.eunoians.mcrpg.listener.ability.OnSneakAbilityListener;
 import us.eunoians.mcrpg.listener.entity.OnAbilityHolderReadyListener;
 import us.eunoians.mcrpg.listener.entity.OnAbilityHolderUnreadyListener;
 import us.eunoians.mcrpg.listener.entity.player.CorePlayerLoadListener;
+import us.eunoians.mcrpg.listener.entity.player.CorePlayerUnloadListener;
 import us.eunoians.mcrpg.listener.entity.player.PlayerJoinListener;
 import us.eunoians.mcrpg.listener.entity.player.PlayerLeaveListener;
 import us.eunoians.mcrpg.listener.entity.player.PlayerPickupItemListener;
+import us.eunoians.mcrpg.listener.entity.player.PlayerSettingChangeListener;
 import us.eunoians.mcrpg.listener.quest.QuestCompleteListener;
 import us.eunoians.mcrpg.listener.quest.QuestObjectiveCompleteListener;
-import us.eunoians.mcrpg.listener.entity.player.PlayerSettingChangeListener;
 import us.eunoians.mcrpg.listener.skill.OnAttackLevelListener;
 import us.eunoians.mcrpg.listener.skill.OnBlockBreakLevelListener;
 import us.eunoians.mcrpg.listener.skill.OnSkillLevelUpListener;
@@ -72,8 +75,8 @@ import us.eunoians.mcrpg.skill.SkillRegistry;
 import us.eunoians.mcrpg.util.LunarUtils;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
 
 /**
  * The main class for McRPG where developers should be able to access various components of the API's provided by McRPG
@@ -87,6 +90,7 @@ public class McRPG extends CorePlugin {
     private static final String customVisibleKey = "mcMMO: Name Visibility";
 
     private FileManager fileManager;
+    private McRPGDatabase database;
 
     private AbilityRegistry abilityRegistry;
     private SkillRegistry skillRegistry;
@@ -139,7 +143,7 @@ public class McRPG extends CorePlugin {
 
         setupHooks();
         if (!isUnitTest()) {
-            initializeDatabase();
+            database = new McRPGDatabase(this, DatabaseDriverType.SQLITE);
             registerListeners();
             constructCommands();
             reloadableContentRegistry.reloadAllContent();
@@ -148,25 +152,17 @@ public class McRPG extends CorePlugin {
 
     @Override
     public void onDisable() {
-
         if (!isUnitTest()) {
             glowingBlocks.disable();
             glowingEntities.disable();
-            Connection connection = databaseManager.getDatabase().getConnection();
-            if (connection == null) {
-                throw new RuntimeException("Database was not available on shutdown... there is likely lost McRPG data as a result.");
-            } else {
+            try (Connection connection = getDatabase().getConnection()) {
                 for (CorePlayer corePlayer : playerManager.getAllPlayers()) {
                     if (corePlayer instanceof McRPGPlayer mcRPGPlayer) {
-                        try {
-                            // TODO make this one thing so it isnt in two spots
-                            SkillDAO.savePlayerSkillData(connection, mcRPGPlayer.asSkillHolder()).get();
-                            PlayerLoadoutDAO.saveAllPlayerLoadouts(connection, mcRPGPlayer.asSkillHolder()).get();
-                            if (isLunarEnabled()) {
-                                LunarUtils.clearCooldowns(mcRPGPlayer.getUUID());
-                            }
-                        } catch (InterruptedException | ExecutionException e) {
-                            throw new RuntimeException(e);
+                        // TODO make this one thing so it isnt in two spots
+                        SkillDAO.savePlayerSkillData(connection, mcRPGPlayer.asSkillHolder());
+                        PlayerLoadoutDAO.saveAllPlayerLoadouts(connection, mcRPGPlayer.asSkillHolder());
+                        if (isLunarEnabled()) {
+                            LunarUtils.clearCooldowns(mcRPGPlayer.getUUID());
                         }
                         if (mcRPGPlayer.useMutex()) {
                             MutexDAO.updateUserMutex(connection, mcRPGPlayer.getUUID(), false);
@@ -174,17 +170,11 @@ public class McRPG extends CorePlugin {
                     }
                 }
             }
+            catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
         super.onDisable();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void initializeDatabase() {
-        this.databaseManager = new McRPGDatabaseManager(this);
-        this.databaseManager.initializeDatabase();
     }
 
     /**
@@ -238,6 +228,7 @@ public class McRPG extends CorePlugin {
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerLeaveListener(), this);
         Bukkit.getPluginManager().registerEvents(new CorePlayerLoadListener(), this);
+        Bukkit.getPluginManager().registerEvents(new CorePlayerUnloadListener(), this);
 
         // Ability activation/ready listeners
         Bukkit.getPluginManager().registerEvents(new OnAttackAbilityListener(), this);
@@ -277,6 +268,17 @@ public class McRPG extends CorePlugin {
         // Setting listener
         Bukkit.getPluginManager().registerEvents(new PlayerSettingChangeListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerPickupItemListener(), this);
+    }
+
+    @Override
+    public void registerDrivers() {
+        driverManager.registerDriver(new McRPGSqliteDriver(this));
+    }
+
+    @NotNull
+    @Override
+    public McRPGDatabase getDatabase() {
+        return database;
     }
 
     /**
@@ -348,12 +350,6 @@ public class McRPG extends CorePlugin {
     @NotNull
     public EntityManager getEntityManager() {
         return entityManager;
-    }
-
-    @Override
-    @NotNull
-    public McRPGDatabaseManager getDatabaseManager() {
-        return (McRPGDatabaseManager) databaseManager;
     }
 
     /**
@@ -474,6 +470,11 @@ public class McRPG extends CorePlugin {
         return geyserEnabled && Geyser.isRegistered();
     }
 
+    /**
+     * Checks to see if Papi is enabled.
+     *
+     * @return {@code true} if Papi is enabled.
+     */
     public boolean isPapiEnabled() {
         return papiEnabled;
     }

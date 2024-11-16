@@ -1,22 +1,22 @@
 package us.eunoians.mcrpg.task;
 
 import com.diamonddagger590.mccore.database.table.impl.MutexDAO;
+import com.diamonddagger590.mccore.database.transaction.BatchTransaction;
+import com.diamonddagger590.mccore.database.transaction.FailsafeTransaction;
 import com.diamonddagger590.mccore.player.CorePlayer;
 import com.diamonddagger590.mccore.player.PlayerManager;
 import com.diamonddagger590.mccore.task.PlayerUnloadTask;
-import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
-import us.eunoians.mcrpg.database.table.PlayerSettingDAO;
-import us.eunoians.mcrpg.event.entity.player.McRPGPlayerUnloadEvent;
 import us.eunoians.mcrpg.database.table.PlayerLoadoutDAO;
+import us.eunoians.mcrpg.database.table.PlayerSettingDAO;
 import us.eunoians.mcrpg.database.table.SkillDAO;
 import us.eunoians.mcrpg.entity.holder.SkillHolder;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * A task used to save and unload the player data
@@ -40,36 +40,31 @@ public class McRPGPlayerUnloadTask extends PlayerUnloadTask {
 
     @Override
     protected boolean unloadPlayer() {
-        Bukkit.getPluginManager().callEvent(new McRPGPlayerUnloadEvent(getCorePlayer()));
-        // Cleanup timers
-        getCorePlayer().asSkillHolder().cleanupHolder();
-        getPlugin().getEntityManager().removeAbilityHolder(getCorePlayer().getUUID());
         PlayerManager playerManager = getPlugin().getPlayerManager();
-        Optional<CorePlayer> corePlayerOptional = playerManager.removePlayer(getCorePlayer().getUUID());
+        // Ensure they are registered... probs a better way to do this
+        Optional<CorePlayer> corePlayerOptional = playerManager.getPlayer(getCorePlayer().getUUID());
 
         if (corePlayerOptional.isPresent() && corePlayerOptional.get() instanceof McRPGPlayer mcRPGPlayer) {
             SkillHolder skillHolder = mcRPGPlayer.asSkillHolder();
-            Connection connection = getPlugin().getDatabaseManager().getDatabase().getConnection();
 
-            CompletableFuture<Void> completableFuture = CompletableFuture.allOf(SkillDAO.saveAllSkillHolderInformation(connection, skillHolder),
-                    PlayerLoadoutDAO.saveAllPlayerLoadouts(connection, skillHolder), PlayerSettingDAO.savePlayerSettings(connection, getCorePlayer().getUUID(), getCorePlayer().getPlayerSettings()));
-            completableFuture.thenAccept(unused -> {
-                // If the player's mutex is locked
+            try (Connection connection = getPlugin().getDatabase().getConnection()) {
+                BatchTransaction batchTransaction = new BatchTransaction(connection);
+                FailsafeTransaction failsafeTransaction = new FailsafeTransaction(connection);
+                failsafeTransaction.addAll(SkillDAO.saveAllSkillHolderInformation(connection, skillHolder));
+                failsafeTransaction.addAll(PlayerLoadoutDAO.saveAllPlayerLoadouts(connection, skillHolder));
+                batchTransaction.addAll(PlayerSettingDAO.savePlayerSettings(connection, getCorePlayer().getUUID(), getCorePlayer().getPlayerSettings()));
+                failsafeTransaction.executeTransaction();
+                batchTransaction.executeTransaction();
+
                 if (mcRPGPlayer.useMutex()) {
-                    MutexDAO.updateUserMutex(connection, mcRPGPlayer.getUUID(), false)
-                            .thenAccept(unused1 -> playerManager.removePlayer(mcRPGPlayer.getUUID())) // TODO this is gonna fuckin break since i already remove player but i cba rn
-                            .exceptionally(throwable -> {
-                                throwable.printStackTrace();
-                                return null;
-                            });
-                } else {
-                    playerManager.removePlayer(mcRPGPlayer.getUUID());
-                    getPlugin().getDisplayManager().removeDisplay(mcRPGPlayer.getUUID());
+                    MutexDAO.updateUserMutex(connection, mcRPGPlayer.getUUID(), false);
                 }
-            }).exceptionally(throwable -> {
-                throwable.printStackTrace();
-                return null;
-            });
+                return true;
+            }
+            catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            }
         }
         return true;
     }
