@@ -1,5 +1,8 @@
 package us.eunoians.mcrpg.command.admin.reset;
 
+import com.diamonddagger590.mccore.database.Database;
+import com.diamonddagger590.mccore.database.transaction.FailsafeTransaction;
+import com.diamonddagger590.mccore.task.core.CoreTask;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
@@ -17,6 +20,7 @@ import us.eunoians.mcrpg.entity.holder.AbilityHolder;
 import us.eunoians.mcrpg.entity.holder.SkillHolder;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Optional;
 
 /**
@@ -42,9 +46,9 @@ public class ResetPlayerCommand extends ResetBaseCommand {
                             BukkitAudiences adventure = McRPG.getInstance().getAdventure();
                             Audience senderAudience = adventure.sender(commandContext.sender().getSender());
                             Audience receiverAudience = adventure.player(player);
-                            Connection connection = McRPG.getInstance().getDatabaseManager().getDatabase().getConnection();
+                            McRPG mcRPG = McRPG.getInstance();
 
-                            Optional<AbilityHolder> abilityHolderOptional = McRPG.getInstance().getEntityManager().getAbilityHolder(player.getUniqueId());
+                            Optional<AbilityHolder> abilityHolderOptional = mcRPG.getEntityManager().getAbilityHolder(player.getUniqueId());
                             if (abilityHolderOptional.isPresent() && abilityHolderOptional.get() instanceof SkillHolder skillHolder) {
                                 // Reset skills
                                 skillHolder.getSkills().stream().map(skillHolder::getSkillHolderData).filter(Optional::isPresent).map(Optional::get).forEach(SkillHolder.SkillHolderData::resetSkill);
@@ -52,20 +56,29 @@ public class ResetPlayerCommand extends ResetBaseCommand {
                                 skillHolder.getAvailableAbilities().stream().map(skillHolder::getAbilityData).filter(Optional::isPresent).map(Optional::get).forEach(AbilityData::resetAbility);
                                 // Reset timers
                                 skillHolder.cleanupHolder();
-                                SkillDAO.saveAllSkillHolderInformation(connection, skillHolder).exceptionally(throwable -> {
-                                    senderAudience.sendMessage(miniMessage.deserialize(String.format("<red>There was an error trying to save data for %s after resetting their data. Please have an admin check console.", player.getDisplayName())));
-                                    throwable.printStackTrace();
-                                    return null;
-                                });
-
                                 receiverAudience.sendMessage(miniMessage.deserialize("<green>You have had your McRPG data reset."));
                                 // Only send a message if the sender is not the receiver or the sender is console
                                 if (!(commandContext.sender() instanceof Player sender) || !sender.getUniqueId().equals(player.getUniqueId())) {
                                     senderAudience.sendMessage(miniMessage.deserialize(String.format("<green>You have reset <gold>%s's <green>McRPG data.", player.getDisplayName())));
                                 }
 
-                                senderAudience.sendMessage(miniMessage.deserialize(String.format("<red>Unable to reset McRPG data for %s.", player.displayName())));
+                                Database database = mcRPG.getDatabase();
+                                database.getDatabaseExecutorService().submit(() -> {
+                                    try (Connection connection = database.getConnection()) {
+                                        new FailsafeTransaction(connection, SkillDAO.saveAllSkillHolderInformation(connection, skillHolder)).executeTransaction();
+                                    } catch (SQLException e) {
+                                        // Go back to main thread
+                                        new CoreTask(mcRPG) {
+                                            @Override
+                                            public void run() {
+                                                senderAudience.sendMessage(miniMessage.deserialize(String.format("<red>There was an error trying to save data for %s after resetting their data. Please have an admin check console.", player.getDisplayName())));
+                                            }
+                                        }.runTask();
+                                        e.printStackTrace();
+                                    }
+                                });
                             }
+                            senderAudience.sendMessage(miniMessage.deserialize(String.format("<red>Unable to reset McRPG data for %s.", player.displayName())));
                         }
                 ));
     }

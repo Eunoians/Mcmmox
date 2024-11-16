@@ -1,29 +1,24 @@
 package us.eunoians.mcrpg.database.table;
 
+import com.diamonddagger590.mccore.database.Database;
 import com.diamonddagger590.mccore.database.table.impl.TableVersionHistoryDAO;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.ability.AbilityRegistry;
 import us.eunoians.mcrpg.configuration.FileType;
 import us.eunoians.mcrpg.configuration.file.MainConfigFile;
-import us.eunoians.mcrpg.database.McRPGDatabaseManager;
 import us.eunoians.mcrpg.entity.holder.LoadoutHolder;
 import us.eunoians.mcrpg.loadout.Loadout;
-import us.eunoians.mcrpg.loadout.LoadoutDisplay;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 /**
  * A DAO used to store a player's loadout
@@ -33,138 +28,85 @@ public class PlayerLoadoutDAO {
     private static final String LEGACY_LOADOUT_TABLE_NAME = "mcrpg_loadout";
     private static final String LOADOUT_TABLE_NAME = "mcrpg_loadout_info";
     private static final String LOADOUT_SLOTS_TABLE_NAME = "mcrpg_loadout_slots";
-    private static final String LOADOUT_DISPLAY_TABLE_NAME = "mcrpg_loadout_display";
     private static final int CURRENT_TABLE_VERSION = 1;
-
-    private static boolean isAcceptingQueries = true;
 
     /**
      * Attempts to create a new table for this DAO provided that the table does not already exist.
      *
      * @param connection      The {@link Connection} to use to attempt the creation
-     * @param databaseManager The {@link McRPGDatabaseManager} being used to attempt to create the table
-     * @return A {@link CompletableFuture} containing a {@link Boolean} that is {@code true} if a new table was made,
-     * or {@code false} otherwise.
+     * @param database The {@link Database} being used to attempt to create the table
+     * @return {@code true} if a new table was made or {@code false} otherwise.
      */
-    @NotNull
-    public static CompletableFuture<Boolean> attemptCreateTable(@NotNull Connection connection, @NotNull McRPGDatabaseManager databaseManager) {
+    public static boolean attemptCreateTable(@NotNull Connection connection, @NotNull Database database) {
+        boolean loadoutTableExists = database.tableExists(connection, LOADOUT_TABLE_NAME);
+        boolean loadoutSlotsTableExists = database.tableExists(connection, LOADOUT_SLOTS_TABLE_NAME);
 
-        CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
+        //Check to see if the table already exists
+        if (loadoutTableExists && loadoutSlotsTableExists) {
+            return false;
+        }
 
-        databaseManager.getDatabaseExecutorService().submit(() -> {
-
-            boolean loadoutTableExists = databaseManager.getDatabase().tableExists(LOADOUT_TABLE_NAME);
-            boolean loadoutSlotsTableExists = databaseManager.getDatabase().tableExists(LOADOUT_SLOTS_TABLE_NAME);
-            boolean displayTableExists = databaseManager.getDatabase().tableExists(LOADOUT_DISPLAY_TABLE_NAME);
-
-            //Check to see if the table already exists
-            if (loadoutTableExists && loadoutSlotsTableExists && displayTableExists) {
-                completableFuture.complete(false);
-                return;
+        boolean created = false;
+        if (!loadoutTableExists) {
+            /*****
+             ** Table Description:
+             ** Contains player loadout information
+             *
+             *
+             * player_uuid is the {@link UUID} of the player being stored
+             * loadout_uuid is the {@link UUID} of the loadout which can be used to lookup specific information about that loadout's contents
+             * loadout_id is the id of the loadout. Players down the line might be able to have multiple loadouts, so this is an integer representing what loadout this is for them to make lookups easier
+             *
+             **
+             ** Reasoning for structure:
+             ** PK is the `player_uuid`, `loadout_id`, `loadout_uuid` fields, as each loadout id can only exist once, and
+             * each loadout + player UUID can only exist once
+             *****/
+            try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE `" + LOADOUT_TABLE_NAME + "`" +
+                    "(" +
+                    "`player_uuid` varchar(36) NOT NULL," +
+                    "`loadout_uuid` varchar(36) NOT NULL," +
+                    "`loadout_id` int(11) NOT NULL DEFAULT 1," +
+                    "PRIMARY KEY (`loadout_id`, `player_uuid`, `loadout_uuid`)" +
+                    ");")) {
+                statement.executeUpdate();
+                created = true;
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
+        }
 
-            isAcceptingQueries = false;
-
-            if (!loadoutTableExists) {
-                /*****
-                 ** Table Description:
-                 ** Contains player loadout information
-                 *
-                 *
-                 * player_uuid is the {@link UUID} of the player being stored
-                 * loadout_uuid is the {@link UUID} of the loadout which can be used to lookup specific information about that loadout's contents
-                 * loadout_id is the id of the loadout. Players down the line might be able to have multiple loadouts, so this is an integer representing what loadout this is for them to make lookups easier
-                 *
-                 **
-                 ** Reasoning for structure:
-                 ** PK is the `player_uuid`, `loadout_id`, `loadout_uuid` fields, as each loadout id can only exist once, and
-                 * each loadout + player UUID can only exist once
-                 *****/
-                try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE `" + LOADOUT_TABLE_NAME + "`" +
-                        "(" +
-                        "`player_uuid` varchar(36) NOT NULL," +
-                        "`loadout_uuid` varchar(36) NOT NULL," +
-                        "`loadout_id` int(11) NOT NULL DEFAULT 1," +
-                        "PRIMARY KEY (`loadout_id`, `player_uuid`, `loadout_uuid`)" +
-                        ");")) {
-                    statement.executeUpdate();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    completableFuture.completeExceptionally(e);
-                }
+        if (!loadoutSlotsTableExists) {
+            /*****
+             ** Table Description:
+             ** Contains player loadout slots
+             *
+             *
+             * loadout_id is the slot of the player's loadout the data belongs to
+             * player_uuid is an integer representing the slot in the loadout that the ability is stored in
+             * ability_id is the ability id that is used to find the corresponding {@link UnlockedAbilities} value
+             **
+             ** Reasoning for structure:
+             ** PK is the composite of `loadout_id` field, `slot_number` and `player_uuid`, as a loadout id will be present once for each ability in the loadout,
+             * so the combination of that and the slot number will be used to look up individual abilities and each player uuid is unique.
+             *
+             * The foreign key requires the player's uuid to be present in the loadout table as that's where the player's loadout info is stored
+             *****/
+            try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE `" + LOADOUT_SLOTS_TABLE_NAME + "`" +
+                    "(" +
+                    "`loadout_id` int(11) NOT NULL," +
+                    "`player_uuid` varchar(36) NOT NULL," +
+                    "`ability_id` varchar(32) NOT NULL," +
+                    "PRIMARY KEY (`loadout_id`, `ability_id`, `player_uuid`), " +
+                    "CONSTRAINT FK_loadout FOREIGN KEY (`player_uuid`) REFERENCES " + LOADOUT_TABLE_NAME + "(`player_uuid`)" +
+                    ");")) {
+                statement.executeUpdate();
+                created = true;
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-
-            if (!loadoutSlotsTableExists) {
-
-                /*****
-                 ** Table Description:
-                 ** Contains player loadout slots
-                 *
-                 *
-                 * loadout_id is the slot of the player's loadout the data belongs to
-                 * player_uuid is an integer representing the slot in the loadout that the ability is stored in
-                 * ability_id is the ability id that is used to find the corresponding {@link UnlockedAbilities} value
-                 **
-                 ** Reasoning for structure:
-                 ** PK is the composite of `loadout_id` field, `slot_number` and `player_uuid`, as a loadout id will be present once for each ability in the loadout,
-                 * so the combination of that and the slot number will be used to look up individual abilities and each player uuid is unique.
-                 *
-                 * The foreign key requires the player's uuid to be present in the loadout table as that's where the player's loadout info is stored
-                 *****/
-                try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE `" + LOADOUT_SLOTS_TABLE_NAME + "`" +
-                        "(" +
-                        "`loadout_id` int(11) NOT NULL," +
-                        "`player_uuid` varchar(36) NOT NULL," +
-                        "`ability_id` varchar(32) NOT NULL," +
-                        "PRIMARY KEY (`loadout_id`, `ability_id`, `player_uuid`), " +
-                        "CONSTRAINT FK_loadout FOREIGN KEY (`player_uuid`) REFERENCES " + LOADOUT_TABLE_NAME + "(`player_uuid`)" +
-                        ");")) {
-                    statement.executeUpdate();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    completableFuture.completeExceptionally(e);
-                }
-            }
-
-            if (!displayTableExists) {
-                /*****
-                 ** Table Description:
-                 ** Contains player loadout slots
-                 *
-                 *
-                 * loadout_id is the slot of the player's loadout the data belongs to
-                 * player_uuid is an integer representing the slot in the loadout that the ability is stored in
-                 * ability_id is the ability id that is used to find the corresponding {@link UnlockedAbilities} value
-                 **
-                 ** Reasoning for structure:
-                 ** PK is the composite of `loadout_id` field, `slot_number` and `player_uuid`, as a loadout id will be present once for each ability in the loadout,
-                 * so the combination of that and the slot number will be used to look up individual abilities and each player uuid is unique.
-                 *
-                 * The foreign key requires the player's uuid to be present in the loadout table as that's where the player's loadout info is stored
-                 *****/
-                try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE `" + LOADOUT_DISPLAY_TABLE_NAME + "`" +
-                        "(" +
-                        "`loadout_id` int(11) NOT NULL," +
-                        "`player_uuid` varchar(36) NOT NULL," +
-                        "`material` varchar(32) NOT NULL," +
-                        "`custom_model_data` int(11) NULL," +
-                        "`display_name` varchar(32) NULL," +
-                        "PRIMARY KEY (`loadout_id`, `player_uuid`), " +
-                        "CONSTRAINT FK_loadout FOREIGN KEY (`player_uuid`) REFERENCES " + LOADOUT_TABLE_NAME + "(`player_uuid`)" +
-                        ");")) {
-                    statement.executeUpdate();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    completableFuture.completeExceptionally(e);
-                }
-            }
-
-            isAcceptingQueries = true;
-
-            completableFuture.complete(true);
-        });
-
-        return completableFuture;
+        }
+        return created;
     }
 
     /**
@@ -174,67 +116,25 @@ public class PlayerLoadoutDAO {
      * safe to run queries on.
      *
      * @param connection The {@link Connection} that will be used to run the changes
-     * @return The {@link  CompletableFuture} that is running these changes.
      */
-    @NotNull
-    public static CompletableFuture<Void> updateTable(@NotNull Connection connection) {
+    public static void updateTable(@NotNull Connection connection) {
+        int lastStoredVersion = TableVersionHistoryDAO.getLatestVersion(connection, LOADOUT_TABLE_NAME);
+        if (lastStoredVersion < CURRENT_TABLE_VERSION) {
+            //Adds table to our tracking
+            if (lastStoredVersion == 0) {
+                TableVersionHistoryDAO.setTableVersion(connection, LOADOUT_TABLE_NAME, 1);
+                lastStoredVersion = 1;
+            }
+        }
 
-        McRPGDatabaseManager databaseManager = McRPG.getInstance().getDatabaseManager();
-        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
-        databaseManager.getDatabaseExecutorService().submit(() -> {
-
-            CompletableFuture<Void> loadoutTableFuture = new CompletableFuture<>();
-
-            TableVersionHistoryDAO.getLatestVersion(connection, LOADOUT_TABLE_NAME)
-                    //Update the mcrpg_loadout_info first
-                    .thenAccept(lastStoredVersion -> {
-
-                        if (lastStoredVersion >= CURRENT_TABLE_VERSION) {
-                            loadoutTableFuture.complete(null);
-                            return;
-                        }
-
-                        isAcceptingQueries = false;
-
-                        //Adds table to our tracking
-                        if (lastStoredVersion == 0) {
-                            TableVersionHistoryDAO.setTableVersion(connection, LOADOUT_TABLE_NAME, 1);
-                            lastStoredVersion = 1;
-                        }
-
-                        isAcceptingQueries = true;
-
-                        loadoutTableFuture.complete(null);
-
-                    });
-
-            loadoutTableFuture.thenAccept(unused -> {
-
-                TableVersionHistoryDAO.getLatestVersion(connection, LOADOUT_SLOTS_TABLE_NAME).thenAccept(lastStoredSlotsVersion -> {
-
-                    if (lastStoredSlotsVersion >= CURRENT_TABLE_VERSION) {
-                        completableFuture.complete(null);
-                        return;
-                    }
-
-                    isAcceptingQueries = false;
-
-                    //Adds table to our tracking
-                    if (lastStoredSlotsVersion == 0) {
-                        TableVersionHistoryDAO.setTableVersion(connection, LOADOUT_SLOTS_TABLE_NAME, 1);
-                        lastStoredSlotsVersion = 1;
-                    }
-
-                    isAcceptingQueries = true;
-
-                    completableFuture.complete(null);
-                });
-
-            });
-
-        });
-
-        return completableFuture;
+        int lastStoredSlotsVersion = TableVersionHistoryDAO.getLatestVersion(connection, LOADOUT_SLOTS_TABLE_NAME);
+        if (lastStoredSlotsVersion < CURRENT_TABLE_VERSION) {
+            //Adds table to our tracking
+            if (lastStoredSlotsVersion == 0) {
+                TableVersionHistoryDAO.setTableVersion(connection, LOADOUT_SLOTS_TABLE_NAME, 1);
+                lastStoredSlotsVersion = 1;
+            }
+        }
     }
 
     /**
@@ -248,177 +148,88 @@ public class PlayerLoadoutDAO {
      * provided player {@link UUID} has equipped.
      */
     @NotNull
-    public static CompletableFuture<Loadout> getPlayerLoadout(@NotNull Connection connection, @NotNull UUID playerUUID, int loadoutNumber) {
-        McRPGDatabaseManager databaseManager = McRPG.getInstance().getDatabaseManager();
+    public static Loadout getPlayerLoadout(@NotNull Connection connection, @NotNull UUID playerUUID, int loadoutNumber) {
         AbilityRegistry abilityRegistry = McRPG.getInstance().getAbilityRegistry();
-        CompletableFuture<Loadout> completableFuture = new CompletableFuture<>();
-
-        databaseManager.getDatabaseExecutorService().submit(() -> {
-            // Start the get for the loadout display
-            var loadoutDisplayOptional = getLoadoutDisplay(connection, playerUUID, loadoutNumber);
-            Loadout loadout = new Loadout(McRPG.getInstance(), playerUUID, loadoutNumber);
-            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT ability_id FROM " + LOADOUT_SLOTS_TABLE_NAME + " WHERE player_uuid = ? AND loadout_id = ?;")) {
-
-                preparedStatement.setString(1, playerUUID.toString());
-                preparedStatement.setInt(2, loadoutNumber);
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-
-                    while (resultSet.next()) {
-                        String abilityId = resultSet.getString("ability_id");
-                        NamespacedKey namespacedKey = new NamespacedKey(McRPG.getInstance(), abilityId);
-                        if (abilityRegistry.isAbilityRegistered(namespacedKey)) {
-                            loadout.addAbility(namespacedKey);
-                        }
+        Loadout loadout = new Loadout(playerUUID, loadoutNumber);
+        try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT ability_id FROM " + LOADOUT_SLOTS_TABLE_NAME + " WHERE player_uuid = ? AND loadout_id = ?;")) {
+            preparedStatement.setString(1, playerUUID.toString());
+            preparedStatement.setInt(2, loadoutNumber);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    String abilityId = resultSet.getString("ability_id");
+                    NamespacedKey namespacedKey = new NamespacedKey(McRPG.getInstance(), abilityId);
+                    if (abilityRegistry.isAbilityRegistered(namespacedKey)) {
+                        loadout.addAbility(namespacedKey);
                     }
                 }
-                // Update the loadout display
-                loadoutDisplayOptional.get().ifPresent(loadout::setLoadoutDisplay);
-            } catch (SQLException | ExecutionException | InterruptedException e) {
-                completableFuture.completeExceptionally(e);
-            }
-            completableFuture.complete(loadout);
-        });
-
-        return completableFuture;
-    }
-
-    @NotNull
-    public static CompletableFuture<Optional<LoadoutDisplay>> getLoadoutDisplay(@NotNull Connection connection, @NotNull UUID playerUUID, int loadoutNumber) {
-        McRPGDatabaseManager databaseManager = McRPG.getInstance().getDatabaseManager();
-        CompletableFuture<Optional<LoadoutDisplay>> completableFuture = new CompletableFuture<>();
-        MiniMessage miniMessage = McRPG.getInstance().getMiniMessage();
-        databaseManager.getDatabaseExecutorService().submit(() -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT material, custom_model_data, display_name FROM " + LOADOUT_DISPLAY_TABLE_NAME + " WHERE player_uuid = ? AND loadout_id = ?;")) {
-                preparedStatement.setString(1, playerUUID.toString());
-                preparedStatement.setInt(2, loadoutNumber);
-
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    while (resultSet.next()) {
-                        String materialName = resultSet.getString("material");
-                        Material material = Material.getMaterial(materialName);
-                        int customModelData = resultSet.getInt("custom_model_data");
-                        String displayName = resultSet.getString("display_name");
-                        Component displayNameComponent = displayName == null ? null : miniMessage.deserialize(displayName);
-                        // Handles any weird name change things in case we have another flattening
-                        if (material == null) {
-                            completableFuture.completeExceptionally(new RuntimeException(String.format("Material %s is not a valid display item for a loadout.", materialName)));
-                            return;
-                        }
-                        // Create the loadout display and return it
-                        completableFuture.complete(Optional.of(new LoadoutDisplay(material, customModelData == 0 ? null : customModelData, displayNameComponent)));
-                    }
-                }
-            } catch (SQLException e) {
-                completableFuture.completeExceptionally(e);
-            }
-            // Otherwise return an empty optional
-            completableFuture.complete(Optional.empty());
-        });
-        return completableFuture;
-    }
-
-    public static CompletableFuture<Void> saveAllPlayerLoadouts(@NotNull Connection connection, @NotNull LoadoutHolder loadoutHolder) {
-        UUID uuid = loadoutHolder.getUUID();
-        int loadoutAmount = McRPG.getInstance().getFileManager().getFile(FileType.MAIN_CONFIG).getInt(MainConfigFile.MAX_LOADOUT_AMOUNT);
-        CompletableFuture[] futures = new CompletableFuture[loadoutAmount];
-        try {
-            connection.setAutoCommit(false);
-            for (int i = 1; i <= loadoutAmount; i++) {
-                futures[i - 1] = savePlayerLoadout(connection, uuid, loadoutHolder.getLoadout(i));
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
-        CompletableFuture<Void> allFuture = CompletableFuture.allOf(futures);
-        return allFuture;
+
+        return loadout;
     }
 
     @NotNull
-    public static CompletableFuture<Void> savePlayerLoadout(@NotNull Connection connection, @NotNull UUID playerUUID, @NotNull Loadout loadout) {
-        McRPGDatabaseManager databaseManager = McRPG.getInstance().getDatabaseManager();
-        AbilityRegistry abilityRegistry = McRPG.getInstance().getAbilityRegistry();
-        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
-        try {
-            deletePlayerLoadout(connection, playerUUID, loadout.getLoadoutSlot()).get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
+    public static List<PreparedStatement> saveAllPlayerLoadouts(@NotNull Connection connection, @NotNull LoadoutHolder loadoutHolder) {
+        List<PreparedStatement> preparedStatements = new ArrayList<>();
+        UUID uuid = loadoutHolder.getUUID();
+        int loadoutAmount = McRPG.getInstance().getFileManager().getFile(FileType.MAIN_CONFIG).getInt(MainConfigFile.MAX_LOADOUT_AMOUNT);
+        for (int i = 1; i <= loadoutAmount; i++) {
+            preparedStatements.addAll(savePlayerLoadout(connection, uuid, loadoutHolder.getLoadout(i)));
         }
+        return preparedStatements;
+    }
+
+    @NotNull
+    public static List<PreparedStatement> savePlayerLoadout(@NotNull Connection connection, @NotNull UUID playerUUID, @NotNull Loadout loadout) {
+        List<PreparedStatement> preparedStatements = new ArrayList<>(deletePlayerLoadout(connection, playerUUID, loadout.getLoadoutSlot()));
+        AbilityRegistry abilityRegistry = McRPG.getInstance().getAbilityRegistry();
+
         // If it's empty, don't bother saving
         if (loadout.getAbilities().isEmpty()) {
-            completableFuture.complete(null);
-            return completableFuture;
+            return preparedStatements;
         }
-        databaseManager.getDatabaseExecutorService().submit(() -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + LOADOUT_TABLE_NAME + " (player_uuid, loadout_id) VALUES (?, ?)")) {
-                preparedStatement.setString(1, playerUUID.toString());
-                preparedStatement.setInt(2, loadout.getLoadoutSlot());
-                preparedStatement.executeUpdate();
-            } catch (SQLException e) {
-                completableFuture.completeExceptionally(e);
+
+        try {
+            PreparedStatement loadoutTableStatement = connection.prepareStatement("INSERT INTO " + LOADOUT_TABLE_NAME + " (player_uuid, loadout_id) VALUES (?, ?)");
+            loadoutTableStatement.setString(1, playerUUID.toString());
+            loadoutTableStatement.setInt(2, loadout.getLoadoutSlot());
+            preparedStatements.add(loadoutTableStatement);
+
+            // TODO move this to its own DAO
+            for (NamespacedKey namespacedKey : loadout.getAbilities()) {
+                PreparedStatement loadoutSlotsTableStatement = connection.prepareStatement("INSERT INTO " + LOADOUT_SLOTS_TABLE_NAME + " (player_uuid, loadout_id, ability_id) VALUES (?, ?, ?);");
+                loadoutSlotsTableStatement.setString(1, playerUUID.toString());
+                loadoutSlotsTableStatement.setInt(2, loadout.getLoadoutSlot());
+                loadoutSlotsTableStatement.setString(3, abilityRegistry.getRegisteredAbility(namespacedKey).getDatabaseName().get());
+                preparedStatements.add(loadoutSlotsTableStatement);
             }
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + LOADOUT_SLOTS_TABLE_NAME + " (player_uuid, loadout_id, ability_id) VALUES (?, ?, ?);")) {
-                preparedStatement.setString(1, playerUUID.toString());
-                preparedStatement.setInt(2, loadout.getLoadoutSlot());
-
-                for (NamespacedKey namespacedKey : loadout.getAbilities()) {
-                    preparedStatement.setString(3, abilityRegistry.getRegisteredAbility(namespacedKey).getDatabaseName().get());
-                    preparedStatement.executeUpdate();
-                }
-            } catch (SQLException e) {
-                completableFuture.completeExceptionally(e);
-            }
-            completableFuture.complete(null);
-        });
-
-        return completableFuture;
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return preparedStatements;
     }
 
-    @NotNull
-    public static CompletableFuture<Void> savePlayerLoadoutDisplay(@NotNull Connection connection, @NotNull UUID playerUUID, int loadoutID, @NotNull LoadoutDisplay loadoutDisplay) {
-        McRPGDatabaseManager databaseManager = McRPG.getInstance().getDatabaseManager();
-        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
-        databaseManager.getDatabaseExecutorService().submit(() -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + LOADOUT_DISPLAY_TABLE_NAME + " (player_uuid, loadout_id, material, custom_model_data, display_name) VALUES (?, ?, ?, ?, ?);")) {
-                preparedStatement.setString(1, playerUUID.toString());
-                preparedStatement.setInt(2, loadoutID);
-                preparedStatement.setString(3, loadoutDisplay.getDisplayItem().getType().name());
-                preparedStatement.setInt(4, loadoutDisplay.getCustomModelData().isEmpty() ? 0 : loadoutDisplay.getCustomModelData().get());
-                preparedStatement.setString(5, loadoutDisplay.getDisplayName().isEmpty() ? null : loadoutDisplay.getDisplayName().get().toString());
-                preparedStatement.executeUpdate();
-            } catch (SQLException e) {
-                completableFuture.completeExceptionally(e);
-            }
-        });
+    public static List<PreparedStatement> deletePlayerLoadout(@NotNull Connection connection, @NotNull UUID playerUUID, int loadoutId) {
+        List<PreparedStatement> preparedStatements = new ArrayList<>();
+        try {
+            PreparedStatement deleteSlotsStatement = connection.prepareStatement("DELETE FROM " + LOADOUT_SLOTS_TABLE_NAME + " WHERE player_uuid = ? AND loadout_id = ?;");
+            deleteSlotsStatement.setString(1, playerUUID.toString());
+            deleteSlotsStatement.setInt(2, loadoutId);
+            preparedStatements.add(deleteSlotsStatement);
 
-        return completableFuture;
-    }
-
-    public static CompletableFuture<Void> deletePlayerLoadout(@NotNull Connection connection, @NotNull UUID playerUUID, int loadoutId) {
-        McRPGDatabaseManager databaseManager = McRPG.getInstance().getDatabaseManager();
-        AbilityRegistry abilityRegistry = McRPG.getInstance().getAbilityRegistry();
-        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
-
-        databaseManager.getDatabaseExecutorService().submit(() -> {
-
-            try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + LOADOUT_SLOTS_TABLE_NAME + " WHERE player_uuid = ? AND loadout_id = ?;")) {
-                preparedStatement.setString(1, playerUUID.toString());
-                preparedStatement.setInt(2, loadoutId);
-                preparedStatement.executeUpdate();
-            } catch (SQLException e) {
-                completableFuture.completeExceptionally(e);
-            }
-
-            try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + LOADOUT_TABLE_NAME + " WHERE player_uuid = ? AND loadout_id = ?")) {
-                preparedStatement.setString(1, playerUUID.toString());
-                preparedStatement.setInt(2, loadoutId);
-                preparedStatement.executeUpdate();
-            } catch (SQLException e) {
-                completableFuture.completeExceptionally(e);
-            }
-            completableFuture.complete(null);
-        });
-        return completableFuture;
+            PreparedStatement deleteLoadoutStatement = connection.prepareStatement("DELETE FROM " + LOADOUT_TABLE_NAME + " WHERE player_uuid = ? AND loadout_id = ?");
+            deleteLoadoutStatement.setString(1, playerUUID.toString());
+            deleteLoadoutStatement.setInt(2, loadoutId);
+            preparedStatements.add(deleteLoadoutStatement);
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return preparedStatements;
     }
 //
 //    /**
@@ -470,13 +281,4 @@ public class PlayerLoadoutDAO {
 //        return completableFuture;
 //    }
 
-    /**
-     * Checks to see if this table is accepting queries at the moment. A reason it could be false is either the table is
-     * in creation or the table is being updated and for some reason a query is attempting to be run.
-     *
-     * @return {@code true} if this table is accepting queries
-     */
-    public static boolean isAcceptingQueries() {
-        return isAcceptingQueries;
-    }
 }

@@ -1,5 +1,7 @@
 package us.eunoians.mcrpg.quest;
 
+import com.diamonddagger590.mccore.database.Database;
+import com.diamonddagger590.mccore.database.transaction.FailsafeTransaction;
 import net.kyori.adventure.audience.Audience;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
@@ -11,6 +13,8 @@ import us.eunoians.mcrpg.ability.impl.TierableAbility;
 import us.eunoians.mcrpg.database.table.SkillDAO;
 import us.eunoians.mcrpg.entity.holder.SkillHolder;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.UUID;
 
 /**
@@ -30,9 +34,14 @@ public class UpgradeQuestReward implements QuestReward {
                         int newTier = Math.min(tierableAbility.getMaxTier(), (int) abilityAttribute.getContent() + 1);
                         abilityData.addAttribute(new AbilityTierAttribute(newTier));
                         abilityData.removeAttribute(AbilityAttributeManager.ABILITY_QUEST_ATTRIBUTE);
-                        SkillDAO.savePlayerAbilityAttributes(McRPG.getInstance().getDatabaseManager().getDatabase().getConnection(), skillHolder).exceptionally(throwable -> {
-                            throwable.printStackTrace();
-                            return null;
+                        Database database = McRPG.getInstance().getDatabase();
+                        database.getDatabaseExecutorService().submit(() -> {
+                            try (Connection connection = database.getConnection()) {
+                                new FailsafeTransaction(connection, SkillDAO.savePlayerAbilityAttributes(connection, skillHolder)).executeTransaction();
+                            }
+                            catch (SQLException e) {
+                                e.printStackTrace();
+                            }
                         });
                         Audience audience = McRPG.getInstance().getAdventure().player(uuid);
                         audience.sendMessage(McRPG.getInstance().getMiniMessage().deserialize(String.format("<green>You have completed the upgrade quest for your <gold>%s ability<green>! It is now tier <gold>%d<green>.", ability.getDisplayName(), newTier)));

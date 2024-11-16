@@ -1,5 +1,8 @@
 package us.eunoians.mcrpg.command.admin.reset;
 
+import com.diamonddagger590.mccore.database.Database;
+import com.diamonddagger590.mccore.database.transaction.FailsafeTransaction;
+import com.diamonddagger590.mccore.task.core.CoreTask;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
@@ -19,6 +22,7 @@ import us.eunoians.mcrpg.entity.holder.SkillHolder;
 import us.eunoians.mcrpg.skill.Skill;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Optional;
 
 /**
@@ -44,7 +48,6 @@ public class ResetSkillCommand extends ResetBaseCommand {
                             Player player = commandContext.get(playerKey);
                             CloudKey<Skill> skillKey = CloudKey.of("reset_skill", Skill.class);
                             Skill skill = commandContext.get(skillKey);
-
                             BukkitAudiences adventure = McRPG.getInstance().getAdventure();
                             Audience senderAudience = adventure.sender(commandContext.sender().getSender());
                             Audience receiverAudience = adventure.player(player);
@@ -61,16 +64,24 @@ public class ResetSkillCommand extends ResetBaseCommand {
                                     if (!(commandContext.sender() instanceof Player sender) || !sender.getUniqueId().equals(player.getUniqueId())) {
                                         senderAudience.sendMessage(miniMessage.deserialize(String.format("<green>You have reset <gold>%s's %s skill <green>.", player.getDisplayName(), skill.getDisplayName())));
                                     }
-                                    Connection connection = McRPG.getInstance().getDatabaseManager().getDatabase().getConnection();
-                                    SkillDAO.savePlayerSkillData(connection, skillHolder, skillHolderData.getSkillKey()).exceptionally(throwable -> {
-                                        senderAudience.sendMessage(miniMessage.deserialize(String.format("<red>There was an error trying to save data for %s after resetting their skill. Please have an admin check console.", player.getDisplayName())));
-                                        throwable.printStackTrace();
-                                        return null;
-                                    });
-                                    SkillDAO.savePlayerAbilityAttributes(connection, skillHolder, McRPG.getInstance().getAbilityRegistry().getAbilitiesBelongingToSkill(skill)).exceptionally(throwable -> {
-                                        senderAudience.sendMessage(miniMessage.deserialize(String.format("<red>There was an error trying to save data for %s after resetting their skill. Please have an admin check console.", player.getDisplayName())));
-                                        throwable.printStackTrace();
-                                        return null;
+
+                                    Database database = McRPG.getInstance().getDatabase();
+                                    database.getDatabaseExecutorService().submit(() -> {
+                                        try (Connection connection = database.getConnection()) {
+                                            FailsafeTransaction failsafeTransaction = new FailsafeTransaction(connection);
+                                            failsafeTransaction.addAll(SkillDAO.savePlayerSkillData(connection, skillHolder, skillHolderData.getSkillKey()));
+                                            failsafeTransaction.addAll(SkillDAO.savePlayerAbilityAttributes(connection, skillHolder, McRPG.getInstance().getAbilityRegistry().getAbilitiesBelongingToSkill(skill)));
+                                            failsafeTransaction.executeTransaction();
+                                        } catch (SQLException e) {
+                                            e.printStackTrace();
+                                            // Go back to main thread
+                                            new CoreTask(McRPG.getInstance()) {
+                                                @Override
+                                                public void run() {
+                                                    senderAudience.sendMessage(miniMessage.deserialize(String.format("<red>There was an error trying to save data for %s after resetting their skill. Please have an admin check console.", player.getDisplayName())));
+                                                }
+                                            }.runTask();
+                                        }
                                     });
                                     return;
                                 }
