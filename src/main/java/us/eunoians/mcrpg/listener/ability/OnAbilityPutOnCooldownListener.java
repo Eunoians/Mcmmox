@@ -6,7 +6,7 @@ import org.bukkit.event.Listener;
 import us.eunoians.mcrpg.ability.impl.CooldownableAbility;
 import us.eunoians.mcrpg.event.ability.AbilityPutOnCooldownEvent;
 import us.eunoians.mcrpg.entity.holder.AbilityHolder;
-import us.eunoians.mcrpg.util.LunarUtils;
+import us.eunoians.mcrpg.integration.lunar.LunarUtils;
 
 /**
  * This listener automatically starts the cooldown expire timer whenever

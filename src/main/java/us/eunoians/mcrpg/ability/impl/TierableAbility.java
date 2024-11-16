@@ -5,8 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.ability.attribute.AbilityAttributeManager;
 import us.eunoians.mcrpg.ability.attribute.AbilityTierAttribute;
 import us.eunoians.mcrpg.entity.holder.AbilityHolder;
-import us.eunoians.mcrpg.quest.Quest;
 
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -44,21 +44,17 @@ public interface TierableAbility extends UnlockableAbility {
         return getUnlockLevelForTier(1);
     }
 
-    /**
-     * Gets the {@link Quest} needed to upgrade this ability at the provided tier.
-     * @param tier The tier to get the upgrade {@link Quest} for
-     * @return The {@link Quest} needed to upgrade this ability.
-     */
+    boolean hasUpgradeQuest();
+
     @NotNull
-    Quest getUpgradeQuestForTier(int tier);
+    Optional<String> getUpgradeQuestObjective();
 
     @NotNull
     @Override
     default Set<NamespacedKey> getApplicableAttributes() {
         return Set.of(AbilityAttributeManager.ABILITY_TOGGLED_OFF_ATTRIBUTE_KEY,
                 AbilityAttributeManager.ABILITY_UNLOCKED_ATTRIBUTE,
-                AbilityAttributeManager.ABILITY_TIER_ATTRIBUTE_KEY,
-                AbilityAttributeManager.ABILITY_QUEST_ATTRIBUTE);
+                AbilityAttributeManager.ABILITY_TIER_ATTRIBUTE_KEY);
     }
 
     /**

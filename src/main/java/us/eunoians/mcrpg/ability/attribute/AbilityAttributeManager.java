@@ -21,7 +21,6 @@ public class AbilityAttributeManager {
     public static final NamespacedKey ABILITY_TIER_ATTRIBUTE_KEY = new NamespacedKey(McRPG.getInstance(), "ability_tier_attribute");
     public static final NamespacedKey ABILITY_TOGGLED_OFF_ATTRIBUTE_KEY = new NamespacedKey(McRPG.getInstance(), "ability_toggled_off_attribute");
     public static final NamespacedKey ABILITY_UNLOCKED_ATTRIBUTE = new NamespacedKey(McRPG.getInstance(), "ability_unlocked_attribute");
-    public static final NamespacedKey ABILITY_QUEST_ATTRIBUTE = new NamespacedKey(McRPG.getInstance(), "ability_quest_attribute");
     public static final NamespacedKey ABILITY_LOCATION_ATTRIBUTE = new NamespacedKey(McRPG.getInstance(), "ability_location_attribute");
     public static final NamespacedKey REMOTE_TRANSFER_MATERIAL_SET_ATTRIBUTE = new NamespacedKey(McRPG.getInstance(), "remote_transfer_material_set_attribute");
     private final McRPG plugin;
@@ -41,7 +40,6 @@ public class AbilityAttributeManager {
         registerAttribute(new AbilityCooldownAttribute());
         registerAttribute(new AbilityToggledOffAttribute());
         registerAttribute(new AbilityUnlockedAttribute());
-        registerAttribute(new AbilityUpgradeQuestAttribute());
         registerAttribute(new AbilityLocationAttribute());
         registerAttribute(new RemoteTransferMaterialSetAttribute());
     }

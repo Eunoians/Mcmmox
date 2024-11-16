@@ -8,7 +8,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
 import us.eunoians.mcrpg.task.McRPGPlayerUnloadTask;
-import us.eunoians.mcrpg.util.LunarUtils;
+import us.eunoians.mcrpg.integration.lunar.LunarUtils;
 
 /**
  * This listener will manage unloading player data

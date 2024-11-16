@@ -12,7 +12,6 @@ import us.eunoians.mcrpg.ability.AbilityData;
 import us.eunoians.mcrpg.ability.AbilityRegistry;
 import us.eunoians.mcrpg.ability.attribute.AbilityAttribute;
 import us.eunoians.mcrpg.ability.attribute.AbilityAttributeManager;
-import us.eunoians.mcrpg.ability.attribute.AbilityUpgradeQuestAttribute;
 import us.eunoians.mcrpg.ability.impl.Ability;
 import us.eunoians.mcrpg.ability.ready.ReadyData;
 import us.eunoians.mcrpg.event.ability.AbilityCooldownExpireEvent;
@@ -586,22 +585,6 @@ public class AbilityHolder {
         if (abilityCooldownExpireTasks.containsKey(namespacedKey)) {
             Bukkit.getServer().getScheduler().cancelTask(abilityCooldownExpireTasks.remove(namespacedKey));
         }
-    }
-
-    /**
-     * Checks to see if there is an active {@link us.eunoians.mcrpg.quest.Quest} for upgrading the {@link Ability} associated
-     * with the provided {@link NamespacedKey}.
-     *
-     * @param abilityKey The {@link NamespacedKey} to check
-     * @return {@code true} if the provided {@link NamespacedKey} has an active upgrade {@link us.eunoians.mcrpg.quest.Quest}
-     */
-    public boolean hasActiveUpgradeQuest(@NotNull NamespacedKey abilityKey) {
-        if (abilityDataMap.containsKey(abilityKey)) {
-            AbilityData abilityData = abilityDataMap.get(abilityKey);
-            var questOptional = abilityData.getAbilityAttribute(AbilityAttributeManager.ABILITY_QUEST_ATTRIBUTE);
-            return questOptional.isPresent() && questOptional.get() instanceof AbilityUpgradeQuestAttribute attribute && attribute.shouldContentBeSaved();
-        }
-        return false;
     }
 
     /**

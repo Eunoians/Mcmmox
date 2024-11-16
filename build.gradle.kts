@@ -45,6 +45,7 @@ repositories {
     maven("https://repo.aikar.co/content/groups/aikar/")
     maven("https://repo.opencollab.dev/main/")
     maven("https://repo.lunarclient.dev") //Lunar client
+    maven("https://nexus.betonquest.org/repository/betonquest/") // Beton Quest
 
     //Spigot
     maven("https://oss.sonatype.org/content/repositories/snapshots/")
@@ -87,6 +88,11 @@ dependencies {
     val apolloVersion = "1.1.5"
     compileOnly("com.lunarclient:apollo-api:$apolloVersion")
 
+    val betonQuestVersion = "2.1.3"
+    compileOnly("org.betonquest:betonquest:$betonQuestVersion") {
+        exclude("com.comphenix.packetwrapper:PacketWrapper")
+    }
+
     // Test deps
     val mockBukkitVersion = "3.80.0"
     testImplementation("com.github.seeseemelk:MockBukkit-v1.20:$mockBukkitVersion")
@@ -102,6 +108,11 @@ dependencies {
     compileOnly(files("libs/mcMMO.jar"))
     compileOnly(files("libs/NoCheatPlus.jar")) //3.16.0-RC-sMD5NET-b1134
     //implementation(kotlin("stdlib-jdk8"))
+}
+
+
+configurations.forEach {
+    it.exclude("com.comphenix.packetwrapper", "PacketWrapper") // Transitive dependency from BetonQuest
 }
 
 tasks.withType<JavaCompile> {

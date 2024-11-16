@@ -3,7 +3,6 @@ package us.eunoians.mcrpg.entity;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.entity.holder.AbilityHolder;
-import us.eunoians.mcrpg.entity.holder.QuestHolder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,12 +21,10 @@ public class EntityManager {
     private final McRPG mcRPG;
 
     private final Map<UUID, AbilityHolder> abilityHolderMap;
-    private final Map<UUID, QuestHolder> questHolderMap;
 
     public EntityManager(@NotNull McRPG mcRPG) {
         this.mcRPG = mcRPG;
         this.abilityHolderMap = new HashMap<>();
-        this.questHolderMap = new HashMap<>();
     }
 
     /**
@@ -85,27 +82,5 @@ public class EntityManager {
     @NotNull
     public Optional<AbilityHolder> removeAbilityHolder(@NotNull UUID uuid) {
         return Optional.ofNullable(abilityHolderMap.remove(uuid));
-    }
-
-    @NotNull
-    public Optional<QuestHolder> getQuestHolder(@NotNull UUID uuid) {
-        return Optional.ofNullable(questHolderMap.get(uuid));
-    }
-
-    public void trackQuestHolder(@NotNull QuestHolder questHolder) {
-        questHolderMap.put(questHolder.getUUID(), questHolder);
-    }
-
-    public boolean isQuestHolderTracked(@NotNull QuestHolder questHolder) {
-        return isQuestHolderTracked(questHolder.getUUID());
-    }
-
-    public boolean isQuestHolderTracked(@NotNull UUID uuid) {
-        return questHolderMap.containsKey(uuid);
-    }
-
-    @NotNull
-    public Optional<QuestHolder> removeQuestHolder(@NotNull UUID uuid) {
-        return Optional.ofNullable(questHolderMap.remove(uuid));
     }
 }

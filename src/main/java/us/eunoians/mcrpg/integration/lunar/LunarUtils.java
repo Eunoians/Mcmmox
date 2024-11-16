@@ -1,4 +1,4 @@
-package us.eunoians.mcrpg.util;
+package us.eunoians.mcrpg.integration.lunar;
 
 import com.lunarclient.apollo.Apollo;
 import com.lunarclient.apollo.common.icon.ItemStackIcon;

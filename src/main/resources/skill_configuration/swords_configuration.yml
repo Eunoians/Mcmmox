@@ -49,14 +49,7 @@ ability-configuration:
         enhanced-bleed-base-damage-increase: 1
         # Ignored for tier 1
         upgrade-point-cost: 1
-        upgrade-quest:
-          kill-criteria:
-            criteria-type: KILL_MOBS
-            progression-required: 20*(tier^2)
-            criteria-filter-mode: ALLOW
-            criteria-filter:
-              - SPIDER
-              - CAVE_SPIDER
+        upgrade-quest: 'enhancedBleedUpgradeObjective'
       tier-1:
         unlock-level: 50
         # The chance of Enhanced Bleed activating bonus damage whenever Bleed is inflicted (on top of the base damage increase)

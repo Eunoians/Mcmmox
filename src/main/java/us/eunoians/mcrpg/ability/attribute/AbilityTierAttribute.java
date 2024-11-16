@@ -2,7 +2,6 @@ package us.eunoians.mcrpg.ability.attribute;
 
 import com.diamonddagger590.mccore.gui.slot.Slot;
 import com.diamonddagger590.mccore.player.CorePlayer;
-import com.diamonddagger590.mccore.util.Methods;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
@@ -16,7 +15,6 @@ import us.eunoians.mcrpg.ability.impl.Ability;
 import us.eunoians.mcrpg.ability.impl.TierableAbility;
 import us.eunoians.mcrpg.entity.holder.SkillHolder;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
-import us.eunoians.mcrpg.quest.QuestManager;
 import us.eunoians.mcrpg.skill.Skill;
 import us.eunoians.mcrpg.skill.SkillRegistry;
 
@@ -106,75 +104,60 @@ public class AbilityTierAttribute extends OptionalSavingAbilityAttribute<Integer
                 // Check if it's unlocked
                 if (abilityData.getAbilityAttribute(AbilityAttributeManager.ABILITY_UNLOCKED_ATTRIBUTE)
                         .map(value -> value instanceof AbilityUnlockedAttribute attribute && attribute.getContent()).orElse(true)) {
-                    var abilityQuestOptional = abilityData.getAbilityAttribute(AbilityAttributeManager.ABILITY_QUEST_ATTRIBUTE);
-                    // If there is an active quest
-                    if (abilityQuestOptional.isPresent() && abilityQuestOptional.get() instanceof AbilityUpgradeQuestAttribute questAttribute && questAttribute.shouldContentBeSaved()) {
-                        QuestManager questManager = McRPG.getInstance().getQuestManager();
-                        var questOptional = questManager.getActiveQuest(questAttribute.getContent());
-                        if (questOptional.isPresent()) {
-                            lore.add(blankLine);
-                            lore.add(miniMessage.deserialize("<gray>Upgrade Quest Progress: ").append(Methods.getProgressBar(questOptional.get().getQuestProgress(), 20)));
-                        } else {
-                            throw new IllegalArgumentException("The ability quest for ability " + ability.getDisplayName() + " was not found.");
-                        }
-                    }
-                    else {
-                        abilityData.getAbilityAttribute(AbilityAttributeManager.ABILITY_TIER_ATTRIBUTE_KEY).ifPresent(abilityAttribute -> {
-                            if (abilityAttribute instanceof AbilityTierAttribute abilityTierAttribute) {
-                                int tier = abilityTierAttribute.getContent();
-                                int nextTier = tier + 1;
-                                int upgradeCost = tierableAbility.getUpgradeCostForTier(nextTier);
-                                // If the ability isn't the max tier
-                                if (tierableAbility.getMaxTier() > tier) {
-                                    // If the ability has a skill it belongs to
-                                    if (tierableAbility.getSkill().isPresent()) {
-                                        var skillDataOptional = skillHolder.getSkillHolderData(tierableAbility.getSkill().get());
-                                        if (skillDataOptional.isPresent()) {
-                                            Skill skill = skillRegistry.getRegisteredSkill(ability.getSkill().get());
-                                            int currentLevel = skillDataOptional.get().getCurrentLevel();
-                                            // If the current skill level is above the unlock level
-                                            if (currentLevel >= tierableAbility.getUnlockLevelForTier(nextTier)) {
-                                                // If they have enough upgrade points, tell them they can click
-                                                if (skillHolder.getUpgradePoints() >= upgradeCost) {
-                                                    lore.add(blankLine);
-                                                    lore.add(miniMessage.deserialize(String.format("<green>Click to spend <gold>%s upgrade points<green> to start upgrade quest.", upgradeCost)));
-                                                }
-                                                // If they don't have enough, tell them how many they need
-                                                else {
-                                                    lore.add(blankLine);
-                                                    lore.add(miniMessage.deserialize(String.format("<gray>You need <gold>%s upgrade points<gray> to start the upgrade quest.", upgradeCost)));
-                                                }
-                                                lore.add(miniMessage.deserialize("<gray>You currently have <gold>" + skillHolder.getUpgradePoints() + "</gold> upgrade points."));
+                    abilityData.getAbilityAttribute(AbilityAttributeManager.ABILITY_TIER_ATTRIBUTE_KEY).ifPresent(abilityAttribute -> {
+                        if (abilityAttribute instanceof AbilityTierAttribute abilityTierAttribute) {
+                            int tier = abilityTierAttribute.getContent();
+                            int nextTier = tier + 1;
+                            int upgradeCost = tierableAbility.getUpgradeCostForTier(nextTier);
+                            // If the ability isn't the max tier
+                            if (tierableAbility.getMaxTier() > tier) {
+                                // If the ability has a skill it belongs to
+                                if (tierableAbility.getSkill().isPresent()) {
+                                    var skillDataOptional = skillHolder.getSkillHolderData(tierableAbility.getSkill().get());
+                                    if (skillDataOptional.isPresent()) {
+                                        Skill skill = skillRegistry.getRegisteredSkill(ability.getSkill().get());
+                                        int currentLevel = skillDataOptional.get().getCurrentLevel();
+                                        // If the current skill level is above the unlock level
+                                        if (currentLevel >= tierableAbility.getUnlockLevelForTier(nextTier)) {
+                                            // If they have enough upgrade points, tell them they can click
+                                            if (skillHolder.getUpgradePoints() >= upgradeCost) {
+                                                lore.add(blankLine);
+                                                lore.add(miniMessage.deserialize(String.format("<green>Click to spend <gold>%s upgrade points<green> to start upgrade quest.", upgradeCost)));
                                             }
-                                            // Otherwise tell the player the level they need to reach
+                                            // If they don't have enough, tell them how many they need
                                             else {
                                                 lore.add(blankLine);
-                                                lore.add(miniMessage.deserialize(
-                                                        String.format("<gray>You can upgrade this ability once you reach <gold>Lv %d<gray> in <gold>%s<gray>.",
-                                                                tierableAbility.getUnlockLevelForTier(nextTier), skill.getDisplayName())));
+                                                lore.add(miniMessage.deserialize(String.format("<gray>You need <gold>%s upgrade points<gray> to start the upgrade quest.", upgradeCost)));
                                             }
+                                            lore.add(miniMessage.deserialize("<gray>You currently have <gold>" + skillHolder.getUpgradePoints() + "</gold> upgrade points."));
                                         }
-                                    }
-                                    // If the ability doesn't have a skill, we only care about upgrade cost
-                                    else {
-                                        // If they have enough upgrade points, tell them they can click
-                                        if (skillHolder.getUpgradePoints() >= upgradeCost) {
-                                            lore.add(blankLine);
-                                            lore.add(miniMessage.deserialize(String.format("<green>Click to spend <gold>%s upgrade points<green> to start upgrade quest.", upgradeCost)));
-                                        }
-                                        // If they don't have enough, tell them how many they need
+                                        // Otherwise tell the player the level they need to reach
                                         else {
                                             lore.add(blankLine);
-                                            lore.add(miniMessage.deserialize(String.format("<gray>You need <gold>%s upgrade points<gray> to start the upgrade quest.", upgradeCost)));
+                                            lore.add(miniMessage.deserialize(
+                                                    String.format("<gray>You can upgrade this ability once you reach <gold>Lv %d<gray> in <gold>%s<gray>.",
+                                                            tierableAbility.getUnlockLevelForTier(nextTier), skill.getDisplayName())));
                                         }
-                                        lore.add(miniMessage.deserialize("<gray>You currently have <gold>" + skillHolder.getUpgradePoints() + "</gold> upgrade points."));
                                     }
                                 }
+                                // If the ability doesn't have a skill, we only care about upgrade cost
+                                else {
+                                    // If they have enough upgrade points, tell them they can click
+                                    if (skillHolder.getUpgradePoints() >= upgradeCost) {
+                                        lore.add(blankLine);
+                                        lore.add(miniMessage.deserialize(String.format("<green>Click to spend <gold>%s upgrade points<green> to start upgrade quest.", upgradeCost)));
+                                    }
+                                    // If they don't have enough, tell them how many they need
+                                    else {
+                                        lore.add(blankLine);
+                                        lore.add(miniMessage.deserialize(String.format("<gray>You need <gold>%s upgrade points<gray> to start the upgrade quest.", upgradeCost)));
+                                    }
+                                    lore.add(miniMessage.deserialize("<gray>You currently have <gold>" + skillHolder.getUpgradePoints() + "</gold> upgrade points."));
+                                }
                             }
-                        });
-                    }
-                }
-                else {
+                        }
+                    });
+                } else {
                     lore.add(blankLine);
                     lore.add(miniMessage.deserialize("<gray>Unlock this ability when your <gold>" +
                             skillRegistry.getRegisteredSkill(ability.getSkill().get()).getDisplayName() + " <gray>skill"));
@@ -194,7 +177,7 @@ public class AbilityTierAttribute extends OptionalSavingAbilityAttribute<Integer
                 if (corePlayer instanceof McRPGPlayer player &&
                         ability instanceof TierableAbility tierableAbility &&
                         player.canPlayerStartUpgradeQuest(tierableAbility)) {
-                    player.startUpgradeQuest(tierableAbility);
+                    // TODO
                 }
                 return true;
             }

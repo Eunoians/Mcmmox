@@ -27,7 +27,6 @@ import us.eunoians.mcrpg.command.link.UnlinkChestCommand;
 import us.eunoians.mcrpg.command.loadout.LoadoutCommand;
 import us.eunoians.mcrpg.command.loadout.LoadoutEditCommand;
 import us.eunoians.mcrpg.command.loadout.LoadoutSetCommand;
-import us.eunoians.mcrpg.command.quest.TestQuestStartCommand;
 import us.eunoians.mcrpg.configuration.FileManager;
 import us.eunoians.mcrpg.database.McRPGDatabaseManager;
 import us.eunoians.mcrpg.database.table.PlayerLoadoutDAO;
@@ -38,6 +37,7 @@ import us.eunoians.mcrpg.entity.player.McRPGPlayer;
 import us.eunoians.mcrpg.expansion.ContentExpansionManager;
 import us.eunoians.mcrpg.expansion.McRPGExpansion;
 import us.eunoians.mcrpg.expansion.handler.ContentHandlerType;
+import us.eunoians.mcrpg.integration.betonquest.BetonQuestIntegration;
 import us.eunoians.mcrpg.listener.ability.OnAbilityActivateListener;
 import us.eunoians.mcrpg.listener.ability.OnAbilityCooldownExpireListener;
 import us.eunoians.mcrpg.listener.ability.OnAbilityPutOnCooldownListener;
@@ -57,22 +57,22 @@ import us.eunoians.mcrpg.listener.entity.player.CorePlayerLoadListener;
 import us.eunoians.mcrpg.listener.entity.player.PlayerJoinListener;
 import us.eunoians.mcrpg.listener.entity.player.PlayerLeaveListener;
 import us.eunoians.mcrpg.listener.entity.player.PlayerPickupItemListener;
-import us.eunoians.mcrpg.listener.quest.QuestCompleteListener;
-import us.eunoians.mcrpg.listener.quest.QuestObjectiveCompleteListener;
 import us.eunoians.mcrpg.listener.entity.player.PlayerSettingChangeListener;
+import us.eunoians.mcrpg.listener.server.ServerLoadFunction;
+import us.eunoians.mcrpg.listener.server.ServerLoadListener;
 import us.eunoians.mcrpg.listener.skill.OnAttackLevelListener;
 import us.eunoians.mcrpg.listener.skill.OnBlockBreakLevelListener;
 import us.eunoians.mcrpg.listener.skill.OnSkillLevelUpListener;
 import us.eunoians.mcrpg.listener.world.BlockPlaceListener;
 import us.eunoians.mcrpg.listener.world.FakeBlockBreakListener;
 import us.eunoians.mcrpg.papi.McRPGPapiExpansion;
-import us.eunoians.mcrpg.quest.QuestManager;
 import us.eunoians.mcrpg.setting.PlayerSettingRegistry;
 import us.eunoians.mcrpg.skill.SkillRegistry;
-import us.eunoians.mcrpg.util.LunarUtils;
+import us.eunoians.mcrpg.integration.lunar.LunarUtils;
 
 import java.sql.Connection;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -93,13 +93,14 @@ public class McRPG extends CorePlugin {
     private AbilityAttributeManager abilityAttributeManager;
     private EntityManager entityManager;
     private DisplayManager displayManager;
-    private QuestManager questManager;
     private BleedManager bleedManager;
     private PlayerSettingRegistry playerSettingRegistry;
     private ContentExpansionManager contentExpansionManager;
 
     private GlowingBlocks glowingBlocks;
     private GlowingEntities glowingEntities;
+
+    private BetonQuestIntegration betonQuestIntegration;
 
     private boolean healthBarPluginEnabled = false;
     private boolean mvdwEnabled = false;
@@ -110,6 +111,7 @@ public class McRPG extends CorePlugin {
     private boolean mcmmoEnabled = false;
     private boolean geyserEnabled = false;
     private boolean lunarEnabled = false;
+    private boolean betonQuestEnabled = false;
 
     @Override
     public void onEnable() {
@@ -128,7 +130,6 @@ public class McRPG extends CorePlugin {
 
         abilityAttributeManager = new AbilityAttributeManager(this);
         displayManager = new DisplayManager(this);
-        questManager = new QuestManager();
         bleedManager = new BleedManager(this);
         playerSettingRegistry = new PlayerSettingRegistry();
         contentExpansionManager = new ContentExpansionManager(this);
@@ -137,7 +138,6 @@ public class McRPG extends CorePlugin {
             registerNativeExpansions();
         }
 
-        setupHooks();
         if (!isUnitTest()) {
             initializeDatabase();
             registerListeners();
@@ -214,9 +214,6 @@ public class McRPG extends CorePlugin {
         // Debug Command
         DebugCommand.registerCommand();
 
-        // Quest Command
-        TestQuestStartCommand.registerCommand();
-
         // Reload command
         ReloadPluginCommand.registerCommand();
 
@@ -262,10 +259,6 @@ public class McRPG extends CorePlugin {
         Bukkit.getPluginManager().registerEvents(new OnAbilityCooldownExpireListener(), this);
         Bukkit.getPluginManager().registerEvents(new OnAbilityPutOnCooldownListener(), this);
 
-        // Quest Listeners
-        Bukkit.getPluginManager().registerEvents(new QuestCompleteListener(), this);
-        Bukkit.getPluginManager().registerEvents(new QuestObjectiveCompleteListener(), this);
-
         // World listener
         Bukkit.getPluginManager().registerEvents(new BlockPlaceListener(), this);
         Bukkit.getPluginManager().registerEvents(new FakeBlockBreakListener(), this);
@@ -277,49 +270,60 @@ public class McRPG extends CorePlugin {
         // Setting listener
         Bukkit.getPluginManager().registerEvents(new PlayerSettingChangeListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerPickupItemListener(), this);
+
+        // Server Load Listener
+        Bukkit.getPluginManager().registerEvents(new ServerLoadListener(setupHooks()), this);
     }
 
     /**
      * Setup 3rd party plugin hooks that are natively supported by McRPG
      */
-    private void setupHooks() {
+    private ServerLoadFunction setupHooks() {
+        return () -> {
 
-        healthBarPluginEnabled = getServer().getPluginManager().getPlugin("HealthBar") != null;
-        sickleEnabled = getServer().getPluginManager().getPlugin("Sickle") != null;
+            healthBarPluginEnabled = getServer().getPluginManager().getPlugin("HealthBar") != null;
+            sickleEnabled = getServer().getPluginManager().getPlugin("Sickle") != null;
 
-        if (healthBarPluginEnabled) {
-            getLogger().info("HealthBar plugin found, McRPG's healthbars are automatically disabled.");
-        }
+            if (healthBarPluginEnabled) {
+                getLogger().info("HealthBar plugin found, McRPG's healthbars are automatically disabled.");
+            }
 
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            papiEnabled = true;
-            getLogger().info("Papi PlaceholderAPI found... registering hooks");
-            new McRPGPapiExpansion(this).register();
-        }
+            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                papiEnabled = true;
+                getLogger().info("Papi PlaceholderAPI found... registering hooks");
+                new McRPGPapiExpansion(this).register();
+            }
 
-        if (Bukkit.getPluginManager().isPluginEnabled("NoCheatPlus")) {
-            ncpEnabled = true;
-            getLogger().info("NoCheatPlus found... will enable anticheat support");
-        }
+            if (Bukkit.getPluginManager().isPluginEnabled("NoCheatPlus")) {
+                ncpEnabled = true;
+                getLogger().info("NoCheatPlus found... will enable anticheat support");
+            }
 
-        if (Bukkit.getPluginManager().isPluginEnabled("mcMMO")) {
-            mcmmoEnabled = true;
-            getLogger().info("McMMO found... ready to convert.");
-        }
+            if (Bukkit.getPluginManager().isPluginEnabled("mcMMO")) {
+                mcmmoEnabled = true;
+                getLogger().info("McMMO found... ready to convert.");
+            }
 
-        if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
-            worldGuardEnabled = true;
-        }
+            if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
+                worldGuardEnabled = true;
+            }
 
-        if (Bukkit.getPluginManager().isPluginEnabled("Geyser")) {
-            geyserEnabled = true;
-            getLogger().info("Geyser found... enabling support.");
-        }
+            if (Bukkit.getPluginManager().isPluginEnabled("Geyser")) {
+                geyserEnabled = true;
+                getLogger().info("Geyser found... enabling support.");
+            }
 
-        if (Bukkit.getPluginManager().isPluginEnabled("Apollo-Bukkit")) {
-            lunarEnabled = true;
-            getLogger().info("Apollo found... enabling Lunar Client support.");
-        }
+            if (Bukkit.getPluginManager().isPluginEnabled("Apollo-Bukkit")) {
+                lunarEnabled = true;
+                getLogger().info("Apollo found... enabling Lunar Client support.");
+            }
+
+            if (Bukkit.getPluginManager().isPluginEnabled("BetonQuest")) {
+                betonQuestEnabled = true;
+                betonQuestIntegration = new BetonQuestIntegration(this);
+                getLogger().info("BetonQuest found... enabling Beton Quest support.");
+            }
+        };
     }
 
     /**
@@ -397,16 +401,6 @@ public class McRPG extends CorePlugin {
     }
 
     /**
-     * Gets the {@link QuestManager} used by McRPG
-     *
-     * @return The {@link QuestManager} used by McRPG
-     */
-    @NotNull
-    public QuestManager getQuestManager() {
-        return questManager;
-    }
-
-    /**
      * Gets the {@link GlowingBlocks} used by McRPG.
      *
      * @return The {@link GlowingBlocks} used by McRPG.
@@ -474,8 +468,32 @@ public class McRPG extends CorePlugin {
         return geyserEnabled && Geyser.isRegistered();
     }
 
+    /**
+     * Checks to see if Papi is enabled and registered.
+     *
+     * @return {@code true} if Papi is enabled and registered.
+     */
     public boolean isPapiEnabled() {
         return papiEnabled;
+    }
+
+    /**
+     * Checks to see if Beton Quest is enabled and registered.
+     *
+     * @return {@code true} if Beton quest is enabled and registered.
+     */
+    public boolean isBetonQuestEnabled() {
+        return betonQuestEnabled;
+    }
+
+    /**
+     * Gets the {@link BetonQuestIntegration} used by McRPG.
+     * @return An {@link Optional} containing the {@link BetonQuestIntegration} used by McRPG,
+     * or an empty optional if integration is not enabled.
+     */
+    @NotNull
+    public Optional<BetonQuestIntegration> getBetonQuestIntegration() {
+        return Optional.ofNullable(betonQuestIntegration);
     }
 
     @NotNull

@@ -9,13 +9,9 @@ import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.ability.attribute.AbilityAttributeManager;
 import us.eunoians.mcrpg.ability.attribute.AbilityTierAttribute;
-import us.eunoians.mcrpg.ability.attribute.AbilityUpgradeQuestAttribute;
 import us.eunoians.mcrpg.ability.impl.TierableAbility;
-import us.eunoians.mcrpg.entity.holder.QuestHolder;
 import us.eunoians.mcrpg.entity.holder.SkillHolder;
 import us.eunoians.mcrpg.event.setting.PlayerSettingChangeEvent;
-import us.eunoians.mcrpg.quest.Quest;
-import us.eunoians.mcrpg.quest.QuestManager;
 import us.eunoians.mcrpg.setting.PlayerSetting;
 
 import java.util.HashMap;
@@ -34,14 +30,12 @@ public class McRPGPlayer extends CorePlayer {
 
     private final McRPG mcRPG;
     private final SkillHolder skillHolder;
-    private final QuestHolder questHolder;
     private final Map<NamespacedKey, PlayerSetting> playerSettings;
 
     public McRPGPlayer(@NotNull Player player, @NotNull McRPG mcRPG) {
         super(player.getUniqueId());
         this.mcRPG = mcRPG;
         skillHolder = new SkillHolder(getUUID());
-        questHolder = new QuestHolder(getUUID());
         playerSettings = new HashMap<>();
     }
 
@@ -49,7 +43,6 @@ public class McRPGPlayer extends CorePlayer {
         super(uuid);
         this.mcRPG = mcRPG;
         skillHolder = new SkillHolder(getUUID());
-        questHolder = new QuestHolder(getUUID());
         playerSettings = new HashMap<>();
     }
 
@@ -78,18 +71,6 @@ public class McRPGPlayer extends CorePlayer {
     public SkillHolder asSkillHolder() {
         return skillHolder;
     }
-
-    /**
-     * Gets the {@link QuestHolder} representation of this player, allowing access
-     * to McRPG quest functionality
-     *
-     * @return The {@link QuestHolder} representation of this player.
-     */
-    @NotNull
-    public QuestHolder asQuestHolder() {
-        return questHolder;
-    }
-
     /**
      * Sets the provided {@link PlayerSetting} as the current setting option for that setting type.
      *
@@ -134,11 +115,7 @@ public class McRPGPlayer extends CorePlayer {
         var abilityDataOptional = skillHolder.getAbilityData(tierableAbility);
         if (abilityDataOptional.isPresent()) {
             var tierAttributeOptional = abilityDataOptional.get().getAbilityAttribute(AbilityAttributeManager.ABILITY_TIER_ATTRIBUTE_KEY);
-            var questAttributeOptional = abilityDataOptional.get().getAbilityAttribute(AbilityAttributeManager.ABILITY_QUEST_ATTRIBUTE);
-            // Validate they don't have an ongoing upgrade quest
-            if (skillHolder.hasActiveUpgradeQuest(tierableAbility.getAbilityKey())) {
-                return false;
-            }
+            // TODO Validate they don't have an ongoing upgrade quest
             if (tierAttributeOptional.isPresent() && tierAttributeOptional.get() instanceof AbilityTierAttribute attribute) {
                 int currentTier = attribute.getContent();
                 int nextTier = currentTier + 1;
@@ -161,25 +138,25 @@ public class McRPGPlayer extends CorePlayer {
         return false;
     }
 
-    /**
-     * Starts an upgrade quest for the provided {@link TierableAbility}.
-     *
-     * @param tierableAbility The {@link TierableAbility} to start an upgrade quest for.
-     */
-    public void startUpgradeQuest(@NotNull TierableAbility tierableAbility) {
-        var abilityDataOptional = skillHolder.getAbilityData(tierableAbility);
-
-        if (abilityDataOptional.isEmpty() || abilityDataOptional.get().getAbilityAttribute(AbilityAttributeManager.ABILITY_QUEST_ATTRIBUTE).isEmpty()
-                || abilityDataOptional.get().getAbilityAttribute(AbilityAttributeManager.ABILITY_TIER_ATTRIBUTE_KEY).isEmpty()) {
-            throw new IllegalArgumentException("Expected ability quest data for ability " + tierableAbility.getDisplayName());
-        }
-        int tier = (int) abilityDataOptional.get().getAbilityAttribute(AbilityAttributeManager.ABILITY_TIER_ATTRIBUTE_KEY).get().getContent() + 1;
-        Quest quest = tierableAbility.getUpgradeQuestForTier(tier);
-        abilityDataOptional.get().addAttribute(new AbilityUpgradeQuestAttribute(quest.getUUID()));
-        QuestManager questManager = McRPG.getInstance().getQuestManager();
-        skillHolder.setUpgradePoints(skillHolder.getUpgradePoints() - tierableAbility.getUpgradeCostForTier(tier));
-        questManager.addActiveQuest(quest);
-        questManager.addHolderToQuest(questHolder, quest);
-        quest.startQuest();
-    }
+//    /**
+//     * Starts an upgrade quest for the provided {@link TierableAbility}.
+//     *
+//     * @param tierableAbility The {@link TierableAbility} to start an upgrade quest for.
+//     */
+//    public void startUpgradeQuest(@NotNull TierableAbility tierableAbility) {
+//        var abilityDataOptional = skillHolder.getAbilityData(tierableAbility);
+//
+//        if (abilityDataOptional.isEmpty() || abilityDataOptional.get().getAbilityAttribute(AbilityAttributeManager.ABILITY_QUEST_ATTRIBUTE).isEmpty()
+//                || abilityDataOptional.get().getAbilityAttribute(AbilityAttributeManager.ABILITY_TIER_ATTRIBUTE_KEY).isEmpty()) {
+//            throw new IllegalArgumentException("Expected ability quest data for ability " + tierableAbility.getDisplayName());
+//        }
+//        int tier = (int) abilityDataOptional.get().getAbilityAttribute(AbilityAttributeManager.ABILITY_TIER_ATTRIBUTE_KEY).get().getContent() + 1;
+//        Quest quest = tierableAbility.getUpgradeQuestForTier(tier);
+//        abilityDataOptional.get().addAttribute(new AbilityUpgradeQuestAttribute(quest.getUUID()));
+//        QuestManager questManager = McRPG.getInstance().getQuestManager();
+//        skillHolder.setUpgradePoints(skillHolder.getUpgradePoints() - tierableAbility.getUpgradeCostForTier(tier));
+//        questManager.addActiveQuest(quest);
+//        questManager.addHolderToQuest(questHolder, quest);
+//        quest.startQuest();
+//    }
 }

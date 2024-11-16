@@ -141,7 +141,6 @@ public class McRPGPlayerLoadTask extends PlayerLoadTask {
         //Begin tracking player
         getPlugin().getPlayerManager().addPlayer(getCorePlayer());
         getPlugin().getEntityManager().trackAbilityHolder(getCorePlayer().asSkillHolder());
-        getPlugin().getEntityManager().trackQuestHolder(getCorePlayer().asQuestHolder());
 
         // Fire event
         super.onPlayerLoadSuccessfully();

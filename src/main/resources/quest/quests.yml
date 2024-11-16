@@ -1,0 +1,9 @@
+events:
+  upgradeEnhancedBleedTier: "mcrpgaddtier enhanced_bleed 1"
+  removeEnhancedBleedTag: "tag delete enhanced-bleed-upgrade-quest"
+
+objectives:
+  enhancedBleedUpgradeObjective: "mobkill SPIDER,CAVE_SPIDER %math.calc:20*(ph.mcrpg_enhanced_bleed_tier)% conditions:enhancedBleedUpgradeQuestActive events:upgradeEnhancedBleedTier,removeEnhancedBleedTag"
+
+conditions:
+  enhancedBleedUpgradeQuestActive: "tag enhanced-bleed-upgrade-quest"
