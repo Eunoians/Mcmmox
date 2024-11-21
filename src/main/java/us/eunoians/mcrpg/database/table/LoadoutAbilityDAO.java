@@ -19,7 +19,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class LoadoutDAO {
+/**
+ * This DAO is used to store and access a {@link Loadout}'s ability contents
+ */
+public class LoadoutAbilityDAO {
 
     static final String TABLE_NAME = "mcrpg_loadout";
     private static final int CURRENT_TABLE_VERSION = 1;
@@ -55,11 +58,11 @@ public class LoadoutDAO {
         try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE `" + TABLE_NAME + "`" +
                 "(" +
                 "`loadout_id` int(11) NOT NULL," +
-                "`uuid` varchar(36) NOT NULL," +
+                "`uuid` varchar(36) NOT NULL," + // TODO this probably should be the loadout UUID tbh
                 "`ability_id` varchar(32) NOT NULL," +
                 "PRIMARY KEY (`loadout_id`, `ability_id`, `uuid`), " +
                 // Ensure that the loadout is stored in the info table, also if it ever gets removed from that table, ensure it's deleted here
-                "CONSTRAINT FK_loadout FOREIGN KEY (`uuid`) REFERENCES " + LoadoutInfoDAO.TABLE_NAME + "(`player_uuid`) ON DELETE CASCADE" +
+                "CONSTRAINT FK_loadout FOREIGN KEY (`uuid`) REFERENCES " + LoadoutInfoDAO.TABLE_NAME + "(`uuid`) ON DELETE CASCADE" +
                 ");")) {
             statement.executeUpdate();
             return true;

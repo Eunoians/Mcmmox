@@ -18,12 +18,11 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * A DAO used to store a player's loadout
+ * A DAO used to store a player's loadout information such as the loadout id and uuid
  */
 public class LoadoutInfoDAO {
 
     static final String TABLE_NAME = "mcrpg_loadout_info";
-    private static final String LOADOUT_SLOTS_TABLE_NAME = "mcrpg_loadout_slots";
     private static final int CURRENT_TABLE_VERSION = 1;
 
     /**
@@ -82,15 +81,6 @@ public class LoadoutInfoDAO {
             if (lastStoredVersion == 0) {
                 TableVersionHistoryDAO.setTableVersion(connection, TABLE_NAME, 1);
                 lastStoredVersion = 1;
-            }
-        }
-
-        int lastStoredSlotsVersion = TableVersionHistoryDAO.getLatestVersion(connection, LOADOUT_SLOTS_TABLE_NAME);
-        if (lastStoredSlotsVersion < CURRENT_TABLE_VERSION) {
-            //Adds table to our tracking
-            if (lastStoredSlotsVersion == 0) {
-                TableVersionHistoryDAO.setTableVersion(connection, LOADOUT_SLOTS_TABLE_NAME, 1);
-                lastStoredSlotsVersion = 1;
             }
         }
     }

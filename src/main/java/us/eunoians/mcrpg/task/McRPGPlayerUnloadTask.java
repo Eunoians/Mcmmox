@@ -8,7 +8,7 @@ import com.diamonddagger590.mccore.player.PlayerManager;
 import com.diamonddagger590.mccore.task.PlayerUnloadTask;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
-import us.eunoians.mcrpg.database.table.LoadoutDAO;
+import us.eunoians.mcrpg.database.table.LoadoutAbilityDAO;
 import us.eunoians.mcrpg.database.table.LoadoutInfoDAO;
 import us.eunoians.mcrpg.database.table.PlayerSettingDAO;
 import us.eunoians.mcrpg.database.table.SkillDAO;
@@ -53,7 +53,7 @@ public class McRPGPlayerUnloadTask extends PlayerUnloadTask {
                 FailsafeTransaction failsafeTransaction = new FailsafeTransaction(connection);
                 failsafeTransaction.addAll(SkillDAO.saveAllSkillHolderInformation(connection, skillHolder));
                 failsafeTransaction.addAll(LoadoutInfoDAO.saveAllLoadoutInfo(connection, skillHolder));
-                failsafeTransaction.addAll(LoadoutDAO.saveAllLoadouts(connection, skillHolder));
+                failsafeTransaction.addAll(LoadoutAbilityDAO.saveAllLoadouts(connection, skillHolder));
                 batchTransaction.addAll(PlayerSettingDAO.savePlayerSettings(connection, getCorePlayer().getUUID(), getCorePlayer().getPlayerSettings()));
                 failsafeTransaction.executeTransaction();
                 batchTransaction.executeTransaction();
