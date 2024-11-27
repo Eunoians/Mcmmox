@@ -201,7 +201,7 @@ public final class Loadout {
         this.loadoutDisplay = loadoutDisplay;
     }
 
-    public boolean shouldSaveLoadout() {
+    public boolean shouldSaveDisplay() {
         return loadoutDisplay.equals(getDefaultDisplayItem());
     }
 

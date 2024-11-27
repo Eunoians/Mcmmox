@@ -42,21 +42,19 @@ public class LoadoutInfoDAO {
          ** Contains player loadout information
          *
          *
-         * uuid is the {@link UUID} of the player being stored
-         * loadout_uuid is the {@link UUID} of the loadout which can be used to lookup specific information about that loadout's contents
+         * holder_uuid is the {@link UUID} of the {@link LoadoutHolder} being stored
          * loadout_id is the id of the loadout. Players down the line might be able to have multiple loadouts, so this is an integer representing what loadout this is for them to make lookups easier
          *
          **
          ** Reasoning for structure:
-         ** PK is the `uuid`, `loadout_id`, `loadout_uuid` fields, as each loadout id can only exist once, and
+         ** PK is the `holder_uuid`, `loadout_id`, `loadout_uuid` fields, as each loadout id can only exist once, and
          * each loadout + player UUID can only exist once
          *****/
         try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE `" + TABLE_NAME + "`" +
                 "(" +
-                "`uuid` varchar(36) NOT NULL," +
-                "`loadout_uuid` varchar(36) NOT NULL," +
+                "`holder_uuid` varchar(36) NOT NULL," +
                 "`loadout_id` int(11) NOT NULL DEFAULT 1," +
-                "PRIMARY KEY (`loadout_id`, `uuid`, `loadout_uuid`)" +
+                "PRIMARY KEY (`loadout_id`, `holder_uuid`)" +
                 ");")) {
             statement.executeUpdate();
             return true;
@@ -97,16 +95,16 @@ public class LoadoutInfoDAO {
     }
 
     @NotNull
-    public static List<PreparedStatement> saveLoadoutInfo(@NotNull Connection connection, @NotNull UUID playerUUID, @NotNull Loadout loadout) {
-        List<PreparedStatement> preparedStatements = new ArrayList<>(deleteLoadoutInfo(connection, playerUUID, loadout.getLoadoutSlot()));
+    public static List<PreparedStatement> saveLoadoutInfo(@NotNull Connection connection, @NotNull UUID loadoutHolderUUID, @NotNull Loadout loadout) {
+        List<PreparedStatement> preparedStatements = new ArrayList<>(deleteLoadoutInfo(connection, loadoutHolderUUID, loadout.getLoadoutSlot()));
         AbilityRegistry abilityRegistry = McRPG.getInstance().getAbilityRegistry();
         // If it's empty, don't bother saving
         if (loadout.getAbilities().isEmpty()) {
             return preparedStatements;
         }
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + TABLE_NAME + " (uuid, loadout_id) VALUES (?, ?)");
-            preparedStatement.setString(1, playerUUID.toString());
+            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + TABLE_NAME + " (holder_uuid, loadout_id) VALUES (?, ?, ?)");
+            preparedStatement.setString(1, loadoutHolderUUID.toString());
             preparedStatement.setInt(2, loadout.getLoadoutSlot());
             preparedStatements.add(preparedStatement);
         }
@@ -117,11 +115,11 @@ public class LoadoutInfoDAO {
     }
 
     @NotNull
-    public static List<PreparedStatement> deleteLoadoutInfo(@NotNull Connection connection, @NotNull UUID playerUUID, int loadoutId) {
+    public static List<PreparedStatement> deleteLoadoutInfo(@NotNull Connection connection, @NotNull UUID lodaoutHolderUUID, int loadoutId) {
         List<PreparedStatement> preparedStatements = new ArrayList<>();
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + TABLE_NAME + " WHERE uuid = ? AND loadout_id = ?");
-            preparedStatement.setString(1, playerUUID.toString());
+            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + TABLE_NAME + " WHERE holder_uuid = ? AND loadout_id = ?");
+            preparedStatement.setString(1, lodaoutHolderUUID.toString());
             preparedStatement.setInt(2, loadoutId);
             preparedStatements.add(preparedStatement);
         }

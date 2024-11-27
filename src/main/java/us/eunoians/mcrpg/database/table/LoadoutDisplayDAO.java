@@ -1,11 +1,21 @@
 package us.eunoians.mcrpg.database.table;
 
 import com.diamonddagger590.mccore.database.Database;
+import com.diamonddagger590.mccore.database.table.impl.TableVersionHistoryDAO;
+import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
+import us.eunoians.mcrpg.McRPG;
+import us.eunoians.mcrpg.loadout.Loadout;
+import us.eunoians.mcrpg.loadout.LoadoutDisplay;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * This DAO is used to store and access a {@link us.eunoians.mcrpg.loadout.Loadout}'s
@@ -46,13 +56,14 @@ public class LoadoutDisplayDAO {
          *****/
         try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE `" + TABLE_NAME + "`" +
                 "(" +
-                "`loadout_uuid` varchar(36) NOT NULL," +
+                "`holder_uuid` varchar(36) NOT NULL," +
+                "`loadout_id` int(11) NOT NULL DEFAULT 1," +
                 "`display_material` varchar(32) NOT NULL," +
                 "`custom_model_data` varchar(32) NOT NULL DEFAULT 0," +
                 "`display_name` varchar(32) NULL," +
                 "PRIMARY KEY (`loadout_uuid`, `ability_id`), " +
                 // Ensure that the loadout is stored in the info table, also if it ever gets removed from that table, ensure it's deleted here
-                "CONSTRAINT FK_loadout FOREIGN KEY (`loadout_uuid`) REFERENCES " + LoadoutInfoDAO.TABLE_NAME + "(`uuid`) ON DELETE CASCADE" +
+                "CONSTRAINT FK_loadout FOREIGN KEY (`holder_uuid`, `loadout_id`) REFERENCES " + LoadoutInfoDAO.TABLE_NAME + "(`holder_uuid`, `loadout_id`) ON DELETE CASCADE" +
                 ");")) {
             statement.executeUpdate();
             return true;
@@ -62,4 +73,82 @@ public class LoadoutDisplayDAO {
         }
     }
 
+    /**
+     * Checks to see if there are any version differences from the live version of this SQL table and then current version.
+     * <p>
+     * If there are any differences, it will iteratively go through and update through each version to ensure the database is
+     * safe to run queries on.
+     *
+     * @param connection The {@link Connection} that will be used to run the changes
+     */
+    public static void updateTable(@NotNull Connection connection) {
+        int lastStoredVersion = TableVersionHistoryDAO.getLatestVersion(connection, TABLE_NAME);
+        if (lastStoredVersion < CURRENT_TABLE_VERSION) {
+            //Adds table to our tracking
+            if (lastStoredVersion == 0) {
+                TableVersionHistoryDAO.setTableVersion(connection, TABLE_NAME, 1);
+                lastStoredVersion = 1;
+            }
+        }
+    }
+
+    @NotNull
+    public static List<PreparedStatement> saveLoadoutDisplay(@NotNull Connection connection, @NotNull UUID loadoutHolderUUID, @NotNull Loadout loadout) {
+        return loadout.shouldSaveDisplay() ? saveLoadoutDisplay(connection, loadoutHolderUUID, loadout.getLoadoutSlot(), loadout.getDisplay()) : deleteLoadoutDisplay(connection, loadoutHolderUUID, loadout.getLoadoutSlot());
+    }
+
+    @NotNull
+    public static List<PreparedStatement> saveLoadoutDisplay(@NotNull Connection connection, @NotNull UUID loadoutHolderUUID, int loadoutSlot, @NotNull LoadoutDisplay loadoutDisplay) {
+        List<PreparedStatement> statements = new ArrayList<>();
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + TABLE_NAME + " (holder_uuid, loadout_id, display_material, custom_model_data, display_name) VALUES (?, ?, ?, ?, ?)");
+            preparedStatement.setString(1, loadoutHolderUUID.toString());
+            preparedStatement.setInt(2, loadoutSlot);
+            preparedStatement.setString(3, loadoutDisplay.getMaterial().toString());
+            preparedStatement.setInt(4, loadoutDisplay.getCustomModelData().orElse(0));
+            preparedStatement.setString(5, loadoutDisplay.getDisplayName().isPresent() ? loadoutDisplay.getDisplayName().get().toString() : null);
+            statements.add(preparedStatement);
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return statements;
+    }
+
+    @NotNull
+    public static List<PreparedStatement> deleteLoadoutDisplay(@NotNull Connection connection, @NotNull UUID loadoutHolderUUID, int loadoutSlot) {
+        List<PreparedStatement> statements = new ArrayList<>();
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM " + TABLE_NAME + " WHERE holder_uuid = ? AND loadout_id = ?");
+            preparedStatement.setString(1, loadoutHolderUUID.toString());
+            preparedStatement.setInt(2, loadoutSlot);
+            statements.add(preparedStatement);
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return statements;
+    }
+
+    @NotNull
+    public static Optional<LoadoutDisplay> getLoadoutDisplay(@NotNull Connection connection, @NotNull UUID loadoutHolderUUID, int loadoutSlot) {
+        Optional<LoadoutDisplay> loadoutDisplayOptional = Optional.empty();
+        try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT display_material, custom_model_data, display_name FROM " + TABLE_NAME + " WHERE holder_uuid = ? AND loadout_id = ?");) {
+            preparedStatement.setString(1, loadoutHolderUUID.toString());
+            preparedStatement.setInt(2, loadoutSlot);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                Material material = Material.getMaterial(resultSet.getString("display_material"));
+                int customModelData = resultSet.getInt("custom_model_data");
+                String displayName = resultSet.getString("display_name");
+                if (material != null) {
+                    loadoutDisplayOptional = Optional.of(new LoadoutDisplay(material, customModelData, displayName != null ? McRPG.getInstance().getMiniMessage().deserialize(displayName) : null));
+                }
+            }
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return loadoutDisplayOptional;
+    }
 }

@@ -57,12 +57,12 @@ public class LoadoutAbilityDAO {
          *****/
         try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE `" + TABLE_NAME + "`" +
                 "(" +
+                "`holder_uuid` varchar(36) NOT NULL," +
                 "`loadout_id` int(11) NOT NULL," +
-                "`uuid` varchar(36) NOT NULL," + // TODO this probably should be the loadout UUID tbh
                 "`ability_id` varchar(32) NOT NULL," +
                 "PRIMARY KEY (`loadout_id`, `ability_id`, `uuid`), " +
                 // Ensure that the loadout is stored in the info table, also if it ever gets removed from that table, ensure it's deleted here
-                "CONSTRAINT FK_loadout FOREIGN KEY (`uuid`) REFERENCES " + LoadoutInfoDAO.TABLE_NAME + "(`uuid`) ON DELETE CASCADE" +
+                "CONSTRAINT FK_loadout FOREIGN KEY (`holder_uuid`, `loadout_id`) REFERENCES " + LoadoutInfoDAO.TABLE_NAME + "(`holder_uuid`, `loadout_id`) ON DELETE CASCADE" +
                 ");")) {
             statement.executeUpdate();
             return true;
@@ -97,7 +97,7 @@ public class LoadoutAbilityDAO {
     public static Loadout getLoadout(@NotNull Connection connection, @NotNull UUID playerUUID, int loadoutNumber) {
         AbilityRegistry abilityRegistry = McRPG.getInstance().getAbilityRegistry();
         Loadout loadout = new Loadout(playerUUID, loadoutNumber);
-        try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT ability_id FROM " + TABLE_NAME + " WHERE uuid = ? AND loadout_id = ?;")) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT ability_id FROM " + TABLE_NAME + " WHERE holder_uuid = ? AND loadout_id = ?;")) {
             preparedStatement.setString(1, playerUUID.toString());
             preparedStatement.setInt(2, loadoutNumber);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -136,7 +136,7 @@ public class LoadoutAbilityDAO {
         }
         try {
             for (NamespacedKey namespacedKey : loadout.getAbilities()) {
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + TABLE_NAME + " (uuid, loadout_id, ability_id) VALUES (?, ?, ?);");
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + TABLE_NAME + " (holder_uuid, loadout_id, ability_id) VALUES (?, ?, ?);");
                 preparedStatement.setString(1, uuid.toString());
                 preparedStatement.setInt(2, loadout.getLoadoutSlot());
                 preparedStatement.setString(3, abilityRegistry.getRegisteredAbility(namespacedKey).getDatabaseName().get());
@@ -153,7 +153,7 @@ public class LoadoutAbilityDAO {
     public static List<PreparedStatement> deleteLoadout(@NotNull Connection connection, @NotNull UUID uuid, int loadoutId) {
         List<PreparedStatement> preparedStatements = new ArrayList<>();
         try {
-            PreparedStatement deleteSlotsStatement = connection.prepareStatement("DELETE FROM " + TABLE_NAME + " WHERE uuid = ? AND loadout_id = ?;");
+            PreparedStatement deleteSlotsStatement = connection.prepareStatement("DELETE FROM " + TABLE_NAME + " WHERE holder_uuid = ? AND loadout_id = ?;");
             deleteSlotsStatement.setString(1, uuid.toString());
             deleteSlotsStatement.setInt(2, loadoutId);
             preparedStatements.add(deleteSlotsStatement);
