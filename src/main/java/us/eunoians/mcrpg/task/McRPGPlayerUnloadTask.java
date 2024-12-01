@@ -2,13 +2,14 @@ package us.eunoians.mcrpg.task;
 
 import com.diamonddagger590.mccore.database.table.impl.MutexDAO;
 import com.diamonddagger590.mccore.database.transaction.BatchTransaction;
-import com.diamonddagger590.mccore.database.transaction.FailsafeTransaction;
+import com.diamonddagger590.mccore.database.transaction.FailSafeTransaction;
 import com.diamonddagger590.mccore.player.CorePlayer;
 import com.diamonddagger590.mccore.player.PlayerManager;
 import com.diamonddagger590.mccore.task.PlayerUnloadTask;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.database.table.LoadoutAbilityDAO;
+import us.eunoians.mcrpg.database.table.LoadoutDisplayDAO;
 import us.eunoians.mcrpg.database.table.LoadoutInfoDAO;
 import us.eunoians.mcrpg.database.table.PlayerSettingDAO;
 import us.eunoians.mcrpg.database.table.SkillDAO;
@@ -50,10 +51,11 @@ public class McRPGPlayerUnloadTask extends PlayerUnloadTask {
 
             try (Connection connection = getPlugin().getDatabase().getConnection()) {
                 BatchTransaction batchTransaction = new BatchTransaction(connection);
-                FailsafeTransaction failsafeTransaction = new FailsafeTransaction(connection);
+                FailSafeTransaction failsafeTransaction = new FailSafeTransaction(connection);
                 failsafeTransaction.addAll(SkillDAO.saveAllSkillHolderInformation(connection, skillHolder));
                 failsafeTransaction.addAll(LoadoutInfoDAO.saveAllLoadoutInfo(connection, skillHolder));
                 failsafeTransaction.addAll(LoadoutAbilityDAO.saveAllLoadouts(connection, skillHolder));
+                failsafeTransaction.addAll(LoadoutDisplayDAO.saveAllLoadoutDisplays(connection, skillHolder));
                 batchTransaction.addAll(PlayerSettingDAO.savePlayerSettings(connection, getCorePlayer().getUUID(), getCorePlayer().getPlayerSettings()));
                 failsafeTransaction.executeTransaction();
                 batchTransaction.executeTransaction();

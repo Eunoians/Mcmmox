@@ -60,9 +60,9 @@ public class LoadoutAbilityDAO {
                 "`holder_uuid` varchar(36) NOT NULL," +
                 "`loadout_id` int(11) NOT NULL," +
                 "`ability_id` varchar(32) NOT NULL," +
-                "PRIMARY KEY (`loadout_id`, `ability_id`, `uuid`), " +
+                "PRIMARY KEY (`loadout_id`, `ability_id`, `holder_uuid`), " +
                 // Ensure that the loadout is stored in the info table, also if it ever gets removed from that table, ensure it's deleted here
-                "CONSTRAINT FK_loadout FOREIGN KEY (`holder_uuid`, `loadout_id`) REFERENCES " + LoadoutInfoDAO.TABLE_NAME + "(`holder_uuid`, `loadout_id`) ON DELETE CASCADE" +
+                "CONSTRAINT FK_loadout FOREIGN KEY (`holder_uuid`, `loadout_id`) REFERENCES " + LoadoutInfoDAO.TABLE_NAME + " (`holder_uuid`, `loadout_id`) ON DELETE CASCADE" +
                 ");")) {
             statement.executeUpdate();
             return true;
@@ -88,6 +88,20 @@ public class LoadoutAbilityDAO {
 
         //Adds table to our tracking
         if (lastStoredVersion == 0) {
+            // Create an index to group by UUIDs
+            try (PreparedStatement preparedStatement = connection.prepareStatement("CREATE INDEX holder_uuid_index ON " + TABLE_NAME + " (holder_uuid)")) {
+                preparedStatement.executeUpdate();
+            }
+            catch (SQLException e) {
+                e.printStackTrace();
+            }
+            // Create an index to group by UUIDs and loadout ids
+            try (PreparedStatement preparedStatement = connection.prepareStatement("CREATE INDEX holder_uuid_and_loadout_index ON " + TABLE_NAME + " (holder_uuid, loadout_id)")) {
+                preparedStatement.executeUpdate();
+            }
+            catch (SQLException e) {
+                e.printStackTrace();
+            }
             TableVersionHistoryDAO.setTableVersion(connection, TABLE_NAME, 1);
             lastStoredVersion = 1;
         }

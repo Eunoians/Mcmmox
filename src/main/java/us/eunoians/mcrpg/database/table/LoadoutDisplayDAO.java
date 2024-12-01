@@ -5,6 +5,7 @@ import com.diamonddagger590.mccore.database.table.impl.TableVersionHistoryDAO;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
+import us.eunoians.mcrpg.entity.holder.LoadoutHolder;
 import us.eunoians.mcrpg.loadout.Loadout;
 import us.eunoians.mcrpg.loadout.LoadoutDisplay;
 
@@ -61,9 +62,9 @@ public class LoadoutDisplayDAO {
                 "`display_material` varchar(32) NOT NULL," +
                 "`custom_model_data` varchar(32) NOT NULL DEFAULT 0," +
                 "`display_name` varchar(32) NULL," +
-                "PRIMARY KEY (`loadout_uuid`, `ability_id`), " +
+                "PRIMARY KEY (`holder_uuid`, `loadout_id`), " +
                 // Ensure that the loadout is stored in the info table, also if it ever gets removed from that table, ensure it's deleted here
-                "CONSTRAINT FK_loadout FOREIGN KEY (`holder_uuid`, `loadout_id`) REFERENCES " + LoadoutInfoDAO.TABLE_NAME + "(`holder_uuid`, `loadout_id`) ON DELETE CASCADE" +
+                "CONSTRAINT FK_loadout FOREIGN KEY (`holder_uuid`, `loadout_id`) REFERENCES " + LoadoutInfoDAO.TABLE_NAME + " (`holder_uuid`, `loadout_id`) ON DELETE CASCADE" +
                 ");")) {
             statement.executeUpdate();
             return true;
@@ -86,10 +87,26 @@ public class LoadoutDisplayDAO {
         if (lastStoredVersion < CURRENT_TABLE_VERSION) {
             //Adds table to our tracking
             if (lastStoredVersion == 0) {
+                // Create an index to group by UUIDs
+                try (PreparedStatement preparedStatement = connection.prepareStatement("CREATE INDEX holder_uuid_index ON " + TABLE_NAME + " (holder_uuid)")) {
+                    preparedStatement.executeUpdate();
+                }
+                catch (SQLException e) {
+                    e.printStackTrace();
+                }
                 TableVersionHistoryDAO.setTableVersion(connection, TABLE_NAME, 1);
                 lastStoredVersion = 1;
             }
         }
+    }
+
+    @NotNull
+    public static List<PreparedStatement> saveAllLoadoutDisplays(@NotNull Connection connection, @NotNull LoadoutHolder loadoutHolder) {
+        List<PreparedStatement> preparedStatements = new ArrayList<>();
+        for (int i = 1; i <= loadoutHolder.getMaxLoadoutAmount(); i++) {
+            preparedStatements.addAll(saveLoadoutDisplay(connection, loadoutHolder.getUUID(), loadoutHolder.getLoadout(i)));
+        }
+        return preparedStatements;
     }
 
     @NotNull

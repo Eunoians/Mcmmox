@@ -47,7 +47,7 @@ public class LoadoutInfoDAO {
          *
          **
          ** Reasoning for structure:
-         ** PK is the `holder_uuid`, `loadout_id`, `loadout_uuid` fields, as each loadout id can only exist once, and
+         ** PK is the `holder_uuid`, `loadout_id` fields, as each loadout id can only exist once, and
          * each loadout + player UUID can only exist once
          *****/
         try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE `" + TABLE_NAME + "`" +
@@ -77,6 +77,13 @@ public class LoadoutInfoDAO {
         if (lastStoredVersion < CURRENT_TABLE_VERSION) {
             //Adds table to our tracking
             if (lastStoredVersion == 0) {
+                // Create an index to group by UUIDs
+                try (PreparedStatement preparedStatement = connection.prepareStatement("CREATE INDEX holder_uuid_index ON " + TABLE_NAME + " (holder_uuid)")) {
+                    preparedStatement.executeUpdate();
+                }
+                catch (SQLException e) {
+                    e.printStackTrace();
+                }
                 TableVersionHistoryDAO.setTableVersion(connection, TABLE_NAME, 1);
                 lastStoredVersion = 1;
             }
