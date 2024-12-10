@@ -22,6 +22,10 @@ import us.eunoians.mcrpg.loadout.Loadout;
 
 import java.util.Optional;
 
+/**
+ * This GUI is used as an entry point for players to go through the workflow
+ * of editing the item representing a loadout.
+ */
 public class LoadoutDisplayHomeGui extends Gui {
 
     private static final Slot FILLER_GLASS_SLOT;
@@ -80,7 +84,7 @@ public class LoadoutDisplayHomeGui extends Gui {
         for (int i = 0; i < inventory.getSize(); i++) {
             setSlot(i, FILLER_GLASS_SLOT);
         }
-        setSlot(NAME_EDIT_SLOT, new LoadoutDisplayNameEditSlot(mcRPGPlayer, loadout));
+        setSlot(NAME_EDIT_SLOT, new LoadoutDisplayNameEditSlot(loadout));
         setSlot(ITEM_EDIT_SLOT, new LoadoutDisplayItemSlot(loadout));
         setSlot(ACTIVE_TOGGLE_SLOT, new ToggleLoadoutActiveSlot(mcRPGPlayer, loadout));
     }
@@ -94,5 +98,4 @@ public class LoadoutDisplayHomeGui extends Gui {
     public void unregisterListeners() {
         InventoryClickEvent.getHandlerList().unregister(this);
     }
-
 }

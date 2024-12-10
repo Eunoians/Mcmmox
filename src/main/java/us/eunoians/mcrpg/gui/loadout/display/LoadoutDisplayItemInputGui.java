@@ -17,11 +17,16 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
+import us.eunoians.mcrpg.gui.slot.loadout.display.LoadoutDisplayCancelItemEditSlot;
+import us.eunoians.mcrpg.gui.slot.loadout.display.LoadoutDisplayItemConfirmSlot;
 import us.eunoians.mcrpg.loadout.Loadout;
 
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * This GUI is used to allow players to input an item that they want to display
+ */
 public class LoadoutDisplayItemInputGui extends Gui implements ClosableGui {
 
     private static final Slot FILLER_GLASS_SLOT;
@@ -92,7 +97,7 @@ public class LoadoutDisplayItemInputGui extends Gui implements ClosableGui {
         if (this.inventory != null) {
             throw new InventoryAlreadyExistsForGuiException(this);
         } else {
-            this.inventory = Bukkit.createInventory(player, 27, McRPG.getInstance().getMiniMessage().deserialize("<gold>Home Gui"));
+            this.inventory = Bukkit.createInventory(player, 27, McRPG.getInstance().getMiniMessage().deserialize("<gold>Input Loadout Display Item"));
             paintInventory();
         }
     }
@@ -105,7 +110,8 @@ public class LoadoutDisplayItemInputGui extends Gui implements ClosableGui {
         for (int i : PURPLE_SLOTS) {
             setSlot(i, PURPLE_GLASS_SLOT);
         }
-
+        setSlot(RETURN_SLOT, new LoadoutDisplayCancelItemEditSlot(loadout));
+        setSlot(CONFIRM_SLOT, new LoadoutDisplayItemConfirmSlot());
     }
 
     @Override
@@ -123,6 +129,15 @@ public class LoadoutDisplayItemInputGui extends Gui implements ClosableGui {
         if (save) {
             saveLoadoutDisplayItem();
         }
+        // Refund the item in the display slot but set it to air before giving it to the player
+        ItemStack itemStack = inventory.getItem(INPUT_SLOT);
+        inventory.setItem(INPUT_SLOT, new ItemStack(Material.AIR));
+        if (itemStack != null && itemStack.getType() != Material.AIR) {
+            player.getInventory().addItem(itemStack).values().forEach(leftover -> {
+                player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+            });
+        }
+        // Open the new inventory after a tick delay
         Bukkit.getScheduler().scheduleSyncDelayedTask(McRPG.getInstance(), () -> {
             LoadoutDisplayHomeGui loadoutDisplayHomeGui = new LoadoutDisplayHomeGui(mcRPGPlayer, loadout);
             McRPG.getInstance().getGuiTracker().trackPlayerGui(mcRPGPlayer, loadoutDisplayHomeGui);
@@ -130,10 +145,20 @@ public class LoadoutDisplayItemInputGui extends Gui implements ClosableGui {
         }, 1L);
     }
 
+    /**
+     * Saves the {@link ItemStack} in the input slot as the display item for the
+     * {@link Loadout}.
+     */
     public void saveLoadoutDisplayItem() {
-
+        ItemStack itemStack = inventory.getItem(INPUT_SLOT);
+        if (itemStack != null && itemStack.getType() != Material.AIR) {
+            loadout.getDisplay().setDisplayItem(itemStack);
+        }
     }
 
+    /**
+     * Will make it so that this inventory does not save the display item when closed
+     */
     public void cancelSave() {
         save = false;
     }

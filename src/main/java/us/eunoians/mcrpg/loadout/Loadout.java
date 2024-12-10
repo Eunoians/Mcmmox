@@ -192,15 +192,30 @@ public final class Loadout {
         return new Loadout(loadoutHolder, loadoutSlot, new HashSet<>(abilities));
     }
 
+    /**
+     * Gets the {@link LoadoutDisplay} used to display this loadout.
+     *
+     * @return The {@link LoadoutDisplay} used to display this loadout.
+     */
     @NotNull
     public LoadoutDisplay getDisplay() {
         return loadoutDisplay;
     }
 
+    /**
+     * Sets the {@link LoadoutDisplay} used to display this loadout.
+     *
+     * @param loadoutDisplay The {@link LoadoutDisplay} used to display this loadout.
+     */
     public void setLoadoutDisplay(@NotNull LoadoutDisplay loadoutDisplay) {
         this.loadoutDisplay = loadoutDisplay;
     }
 
+    /**
+     * Checks to see if the {@link LoadoutDisplay} for this loadout needs to be saved.
+     *
+     * @return {@code true} if the {@link LoadoutDisplay} for this loadout needs to be saved.
+     */
     public boolean shouldSaveDisplay() {
         return loadoutDisplay.equals(getDefaultDisplayItem());
     }
@@ -214,6 +229,11 @@ public final class Loadout {
         return McRPG.getInstance().getFileManager().getFile(FileType.MAIN_CONFIG).getInt(MainConfigFile.MAX_LOADOUT_SIZE);
     }
 
+    /**
+     * Gets the default {@link LoadoutDisplay} for loadouts.
+     *
+     * @return The default {@link LoadoutDisplay} for loadouts.
+     */
     private LoadoutDisplay getDefaultDisplayItem() {
         return new LoadoutDisplay(Material.CHERRY_SIGN, null, McRPGMethods.translate("<gray>Loadout <gold>" + getLoadoutSlot()));
     }

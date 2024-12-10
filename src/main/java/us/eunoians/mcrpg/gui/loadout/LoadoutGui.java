@@ -19,7 +19,7 @@ import us.eunoians.mcrpg.gui.ability.PaginatedSortedAbilityGui;
 import us.eunoians.mcrpg.gui.slot.loadout.InvalidLoadoutSlot;
 import us.eunoians.mcrpg.gui.slot.loadout.LoadoutAbilitySlot;
 import us.eunoians.mcrpg.gui.slot.loadout.LoadoutHomeSlot;
-import us.eunoians.mcrpg.gui.slot.loadout.ToggleLoadoutActiveSlot;
+import us.eunoians.mcrpg.gui.slot.loadout.display.LoadoutDisplayHomeSlot;
 import us.eunoians.mcrpg.loadout.Loadout;
 
 import java.util.List;
@@ -38,7 +38,7 @@ public class LoadoutGui extends PaginatedSortedAbilityGui {
     private static final int PREVIOUS_PAGE_SLOT_INDEX = NAVIGATION_ROW_START_INDEX + 2;
     private static final int SORT_SLOT_INDEX = NAVIGATION_ROW_START_INDEX + 4;
     private static final int NEXT_PAGE_SLOT_INDEX = NAVIGATION_ROW_START_INDEX + 6;
-    private static final int TOGGLE_LOADOUT_SLOT_INDEX = NAVIGATION_ROW_START_INDEX + 8;
+    private static final int LOADOUT_DISPLAY_EDIT_SLOT = NAVIGATION_ROW_START_INDEX + 8;
 
     // Create static slots
     static {
@@ -125,7 +125,7 @@ public class LoadoutGui extends PaginatedSortedAbilityGui {
             setSlot(NEXT_PAGE_SLOT_INDEX, NEXT_PAGE_SLOT);
         }
         // Set the toggle loadout slot
-        setSlot(TOGGLE_LOADOUT_SLOT_INDEX, new ToggleLoadoutActiveSlot(getMcRPGPlayer(), getLoadout()));
+        setSlot(LOADOUT_DISPLAY_EDIT_SLOT, new LoadoutDisplayHomeSlot(getLoadout()));
     }
 
     @Override

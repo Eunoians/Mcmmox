@@ -9,44 +9,44 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
-import us.eunoians.mcrpg.entity.player.McRPGPlayer;
-import us.eunoians.mcrpg.gui.loadout.display.LoadoutDisplayHomeGui;
+import us.eunoians.mcrpg.gui.loadout.display.LoadoutDisplayItemInputGui;
 import us.eunoians.mcrpg.loadout.Loadout;
 
 import java.util.List;
 
 /**
- * This slot allows for opening of the {@link LoadoutDisplayHomeGui} when clicked.
+ * This slot is used whenever a player wants to cancel editing the item that they are trying to
+ * use to update the display for a {@link Loadout}.
  */
-public class LoadoutDisplayHomeSlot extends Slot {
+public class LoadoutDisplayCancelItemEditSlot extends Slot {
 
-    private Loadout loadout;
+    private final Loadout loadout;
 
-    public LoadoutDisplayHomeSlot(@NotNull Loadout loadout) {
+    public LoadoutDisplayCancelItemEditSlot(@NotNull Loadout loadout){
         this.loadout = loadout;
     }
 
     @Override
     public boolean onClick(@NotNull CorePlayer corePlayer, @NotNull ClickType clickType) {
         corePlayer.getAsBukkitPlayer().ifPresent(player -> {
-            if (corePlayer instanceof McRPGPlayer mcRPGPlayer) {
-                LoadoutDisplayHomeGui loadoutDisplayHomeGui = new LoadoutDisplayHomeGui(mcRPGPlayer, loadout);
-                McRPG.getInstance().getGuiTracker().trackPlayerGui(mcRPGPlayer, loadoutDisplayHomeGui);
-                player.openInventory(loadoutDisplayHomeGui.getInventory());
-            }
+            McRPG.getInstance().getGuiTracker().getOpenedGui(player).ifPresent(gui -> {
+                if (gui instanceof LoadoutDisplayItemInputGui displayItemInputGui) {
+                    displayItemInputGui.cancelSave();
+                }
+            });
+            player.closeInventory();
         });
         return true;
     }
-
 
     @NotNull
     @Override
     public ItemStack getItem() {
         MiniMessage miniMessage = McRPG.getInstance().getMiniMessage();
-        ItemStack itemStack = new ItemStack(Material.OAK_HANGING_SIGN);
+        ItemStack itemStack = new ItemStack(Material.BARRIER);
         ItemMeta itemMeta = itemStack.getItemMeta();
-        itemMeta.displayName(miniMessage.deserialize("<gold>Edit Loadout Display"));
-        itemMeta.lore(List.of(miniMessage.deserialize("<gold>Click <gray>to change how this loadout is displayed.")));
+        itemMeta.displayName(miniMessage.deserialize("<gold>Cancel editing loadout display item."));
+        itemMeta.lore(List.of(miniMessage.deserialize("<gold>Click <gray>to cancel editing loadout display item.")));
         itemStack.setItemMeta(itemMeta);
         return itemStack;
     }
