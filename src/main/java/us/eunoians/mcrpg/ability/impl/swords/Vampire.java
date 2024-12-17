@@ -91,7 +91,7 @@ public final class Vampire extends McRPGAbility implements ConfigurableTierableA
         if (!vampireActivateEvent.isCancelled()) {
             LivingEntity livingEntity = (LivingEntity) Bukkit.getEntity(abilityHolder.getUUID()); //We assert this in the vampire components
             assert livingEntity != null;
-            livingEntity.setHealth(Math.min(Objects.requireNonNull(livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH)).getValue(),
+            livingEntity.setHealth(Math.min(Objects.requireNonNull(livingEntity.getAttribute(Attribute.MAX_HEALTH)).getValue(),
                     livingEntity.getHealth() + vampireActivateEvent.getAmountToHeal()));
         }
     }

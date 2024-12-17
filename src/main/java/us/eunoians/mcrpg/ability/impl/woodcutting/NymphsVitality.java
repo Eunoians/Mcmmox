@@ -4,6 +4,8 @@ import com.diamonddagger590.mccore.configuration.ReloadableContent;
 import com.diamonddagger590.mccore.configuration.ReloadableSet;
 import dev.dejvokep.boostedyaml.YamlDocument;
 import dev.dejvokep.boostedyaml.route.Route;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -19,15 +21,17 @@ import us.eunoians.mcrpg.ability.McRPGAbility;
 import us.eunoians.mcrpg.ability.impl.ConfigurableTierableAbility;
 import us.eunoians.mcrpg.ability.impl.PassiveAbility;
 import us.eunoians.mcrpg.ability.impl.ReloadableContentAbility;
-import us.eunoians.mcrpg.event.ability.woodcutting.NymphsVitalityActivateEvent;
 import us.eunoians.mcrpg.configuration.FileType;
 import us.eunoians.mcrpg.configuration.file.skill.WoodcuttingConfigFile;
 import us.eunoians.mcrpg.entity.holder.AbilityHolder;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
+import us.eunoians.mcrpg.event.ability.woodcutting.NymphsVitalityActivateEvent;
 import us.eunoians.mcrpg.skill.impl.woodcutting.Woodcutting;
 import us.eunoians.mcrpg.util.McRPGMethods;
 
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -55,7 +59,16 @@ public class NymphsVitality extends McRPGAbility implements PassiveAbility, Conf
      * @return A {@link ReloadableSet} of {@link Biome}s that can trigger this ability.
      */
     private ReloadableSet<Biome> getValidBiomes() {
-        return new ReloadableSet<>(getYamlDocument(), WoodcuttingConfigFile.NYMPHS_VITALITY_VALID_BIOMES, strings -> strings.stream().map(Biome::valueOf).collect(Collectors.toSet()));
+        return new ReloadableSet<>(getYamlDocument(), WoodcuttingConfigFile.NYMPHS_VITALITY_VALID_BIOMES, strings -> strings.stream()
+                .map(string -> {
+                    try {
+                        return RegistryAccess.registryAccess().getRegistry(RegistryKey.BIOME).get(NamespacedKey.minecraft(string));
+                    } catch (NoSuchElementException | IllegalArgumentException e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet()));
     }
 
     @NotNull

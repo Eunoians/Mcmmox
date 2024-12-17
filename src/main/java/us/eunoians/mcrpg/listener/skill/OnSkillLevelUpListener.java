@@ -1,7 +1,7 @@
 package us.eunoians.mcrpg.listener.skill;
 
 import com.diamonddagger590.mccore.database.Database;
-import com.diamonddagger590.mccore.database.transaction.FailsafeTransaction;
+import com.diamonddagger590.mccore.database.transaction.FailSafeTransaction;
 import com.diamonddagger590.mccore.player.PlayerManager;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -86,7 +86,7 @@ public class OnSkillLevelUpListener implements Listener {
                                 Database database = McRPG.getInstance().getDatabase();
                                 database.getDatabaseExecutorService().submit(() -> {
                                     try (Connection connection = database.getConnection()) {
-                                        new FailsafeTransaction(connection, SkillDAO.savePlayerSkillData(connection, skillHolder)).executeTransaction();
+                                        new FailSafeTransaction(connection, SkillDAO.savePlayerSkillData(connection, skillHolder)).executeTransaction();
                                     }
                                     catch (SQLException e) {
                                         e.printStackTrace();

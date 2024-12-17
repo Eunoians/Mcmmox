@@ -1,7 +1,7 @@
 package us.eunoians.mcrpg.quest;
 
 import com.diamonddagger590.mccore.database.Database;
-import com.diamonddagger590.mccore.database.transaction.FailsafeTransaction;
+import com.diamonddagger590.mccore.database.transaction.FailSafeTransaction;
 import net.kyori.adventure.audience.Audience;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +37,7 @@ public class UpgradeQuestReward implements QuestReward {
                         Database database = McRPG.getInstance().getDatabase();
                         database.getDatabaseExecutorService().submit(() -> {
                             try (Connection connection = database.getConnection()) {
-                                new FailsafeTransaction(connection, SkillDAO.savePlayerAbilityAttributes(connection, skillHolder)).executeTransaction();
+                                new FailSafeTransaction(connection, SkillDAO.savePlayerAbilityAttributes(connection, skillHolder)).executeTransaction();
                             }
                             catch (SQLException e) {
                                 e.printStackTrace();
