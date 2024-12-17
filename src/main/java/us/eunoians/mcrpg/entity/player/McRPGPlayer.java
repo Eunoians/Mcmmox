@@ -1,5 +1,8 @@
 package us.eunoians.mcrpg.entity.player;
 
+import com.diamonddagger590.mccore.database.table.impl.MutexDAO;
+import com.diamonddagger590.mccore.database.transaction.BatchTransaction;
+import com.diamonddagger590.mccore.database.transaction.FailSafeTransaction;
 import com.diamonddagger590.mccore.player.CorePlayer;
 import com.google.common.collect.ImmutableSet;
 import org.bukkit.Bukkit;
@@ -11,6 +14,11 @@ import us.eunoians.mcrpg.ability.attribute.AbilityAttributeManager;
 import us.eunoians.mcrpg.ability.attribute.AbilityTierAttribute;
 import us.eunoians.mcrpg.ability.attribute.AbilityUpgradeQuestAttribute;
 import us.eunoians.mcrpg.ability.impl.TierableAbility;
+import us.eunoians.mcrpg.database.table.LoadoutAbilityDAO;
+import us.eunoians.mcrpg.database.table.LoadoutDisplayDAO;
+import us.eunoians.mcrpg.database.table.LoadoutInfoDAO;
+import us.eunoians.mcrpg.database.table.PlayerSettingDAO;
+import us.eunoians.mcrpg.database.table.SkillDAO;
 import us.eunoians.mcrpg.entity.holder.QuestHolder;
 import us.eunoians.mcrpg.entity.holder.SkillHolder;
 import us.eunoians.mcrpg.event.setting.PlayerSettingChangeEvent;
@@ -18,6 +26,7 @@ import us.eunoians.mcrpg.quest.Quest;
 import us.eunoians.mcrpg.quest.QuestManager;
 import us.eunoians.mcrpg.setting.PlayerSetting;
 
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -181,5 +190,21 @@ public class McRPGPlayer extends CorePlayer {
         questManager.addActiveQuest(quest);
         questManager.addHolderToQuest(questHolder, quest);
         quest.startQuest();
+    }
+
+    public void savePlayer(@NotNull Connection connection) {
+        BatchTransaction batchTransaction = new BatchTransaction(connection);
+        FailSafeTransaction failsafeTransaction = new FailSafeTransaction(connection);
+        failsafeTransaction.addAll(SkillDAO.saveAllSkillHolderInformation(connection, skillHolder));
+        failsafeTransaction.addAll(LoadoutInfoDAO.saveAllLoadoutInfo(connection, skillHolder));
+        failsafeTransaction.addAll(LoadoutAbilityDAO.saveAllLoadouts(connection, skillHolder));
+        failsafeTransaction.addAll(LoadoutDisplayDAO.saveAllLoadoutDisplays(connection, skillHolder));
+        batchTransaction.addAll(PlayerSettingDAO.savePlayerSettings(connection, getUUID(), getPlayerSettings()));
+        failsafeTransaction.executeTransaction();
+        batchTransaction.executeTransaction();
+
+        if (useMutex()) {
+            MutexDAO.updateUserMutex(connection, getUUID(), false);
+        }
     }
 }

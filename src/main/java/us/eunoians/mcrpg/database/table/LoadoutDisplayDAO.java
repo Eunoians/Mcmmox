@@ -2,6 +2,7 @@ package us.eunoians.mcrpg.database.table;
 
 import com.diamonddagger590.mccore.database.Database;
 import com.diamonddagger590.mccore.database.table.impl.TableVersionHistoryDAO;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
@@ -116,8 +117,10 @@ public class LoadoutDisplayDAO {
 
     @NotNull
     public static List<PreparedStatement> saveLoadoutDisplay(@NotNull Connection connection, @NotNull UUID loadoutHolderUUID, int loadoutSlot, @NotNull LoadoutDisplay loadoutDisplay) {
+        Bukkit.broadcastMessage("4");
         List<PreparedStatement> statements = new ArrayList<>();
         try {
+            Bukkit.broadcastMessage("5");
             PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + TABLE_NAME + " (holder_uuid, loadout_id, display_material, custom_model_data, display_name) VALUES (?, ?, ?, ?, ?)");
             preparedStatement.setString(1, loadoutHolderUUID.toString());
             preparedStatement.setInt(2, loadoutSlot);

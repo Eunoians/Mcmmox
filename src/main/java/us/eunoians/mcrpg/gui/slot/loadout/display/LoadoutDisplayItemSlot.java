@@ -3,6 +3,7 @@ package us.eunoians.mcrpg.gui.slot.loadout.display;
 import com.diamonddagger590.mccore.gui.slot.Slot;
 import com.diamonddagger590.mccore.player.CorePlayer;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -28,8 +29,11 @@ public class LoadoutDisplayItemSlot extends Slot {
 
     @Override
     public boolean onClick(@NotNull CorePlayer corePlayer, @NotNull ClickType clickType) {
+        Bukkit.broadcastMessage("1");
         corePlayer.getAsBukkitPlayer().ifPresent(player -> {
-            if (player instanceof McRPGPlayer mcRPGPlayer) {
+            Bukkit.broadcastMessage("2");
+            if (corePlayer instanceof McRPGPlayer mcRPGPlayer) {
+                Bukkit.broadcastMessage("3");
                 LoadoutDisplayItemInputGui loadoutDisplayItemInputGui = new LoadoutDisplayItemInputGui(mcRPGPlayer, loadout);
                 McRPG.getInstance().getGuiTracker().trackPlayerGui(mcRPGPlayer, loadoutDisplayItemInputGui);
                 player.openInventory(loadoutDisplayItemInputGui.getInventory());

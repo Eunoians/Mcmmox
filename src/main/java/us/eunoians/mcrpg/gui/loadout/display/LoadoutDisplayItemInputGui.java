@@ -126,6 +126,7 @@ public class LoadoutDisplayItemInputGui extends Gui implements ClosableGui {
 
     @Override
     public void onClose(InventoryCloseEvent inventoryCloseEvent) {
+        Bukkit.broadcastMessage("on close");
         if (save) {
             saveLoadoutDisplayItem();
         }
