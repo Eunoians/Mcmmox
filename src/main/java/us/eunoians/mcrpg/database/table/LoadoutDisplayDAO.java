@@ -89,7 +89,7 @@ public class LoadoutDisplayDAO {
             //Adds table to our tracking
             if (lastStoredVersion == 0) {
                 // Create an index to group by UUIDs
-                try (PreparedStatement preparedStatement = connection.prepareStatement("CREATE INDEX holder_uuid_index ON " + TABLE_NAME + " (holder_uuid)")) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement("CREATE INDEX holder_uuid_index_loadout_display ON " + TABLE_NAME + " (holder_uuid)")) {
                     preparedStatement.executeUpdate();
                 }
                 catch (SQLException e) {
@@ -105,6 +105,7 @@ public class LoadoutDisplayDAO {
     public static List<PreparedStatement> saveAllLoadoutDisplays(@NotNull Connection connection, @NotNull LoadoutHolder loadoutHolder) {
         List<PreparedStatement> preparedStatements = new ArrayList<>();
         for (int i = 1; i <= loadoutHolder.getMaxLoadoutAmount(); i++) {
+            preparedStatements.addAll(deleteLoadoutDisplay(connection, loadoutHolder.getUUID(), i));
             preparedStatements.addAll(saveLoadoutDisplay(connection, loadoutHolder.getUUID(), loadoutHolder.getLoadout(i)));
         }
         return preparedStatements;

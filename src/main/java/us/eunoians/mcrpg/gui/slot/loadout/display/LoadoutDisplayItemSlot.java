@@ -34,6 +34,7 @@ public class LoadoutDisplayItemSlot extends Slot {
             Bukkit.broadcastMessage("2");
             if (corePlayer instanceof McRPGPlayer mcRPGPlayer) {
                 Bukkit.broadcastMessage("3");
+                player.closeInventory();
                 LoadoutDisplayItemInputGui loadoutDisplayItemInputGui = new LoadoutDisplayItemInputGui(mcRPGPlayer, loadout);
                 McRPG.getInstance().getGuiTracker().trackPlayerGui(mcRPGPlayer, loadoutDisplayItemInputGui);
                 player.openInventory(loadoutDisplayItemInputGui.getInventory());

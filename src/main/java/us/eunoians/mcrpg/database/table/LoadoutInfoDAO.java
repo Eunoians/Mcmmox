@@ -78,7 +78,7 @@ public class LoadoutInfoDAO {
             //Adds table to our tracking
             if (lastStoredVersion == 0) {
                 // Create an index to group by UUIDs
-                try (PreparedStatement preparedStatement = connection.prepareStatement("CREATE INDEX holder_uuid_index ON " + TABLE_NAME + " (holder_uuid)")) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement("CREATE INDEX holder_uuid_index_loadout_info ON " + TABLE_NAME + " (holder_uuid)")) {
                     preparedStatement.executeUpdate();
                 }
                 catch (SQLException e) {

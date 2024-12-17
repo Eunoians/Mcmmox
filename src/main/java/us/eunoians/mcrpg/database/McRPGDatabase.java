@@ -7,6 +7,7 @@ import com.diamonddagger590.mccore.database.driver.DatabaseDriverType;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.database.table.LoadoutAbilityDAO;
+import us.eunoians.mcrpg.database.table.LoadoutDisplayDAO;
 import us.eunoians.mcrpg.database.table.PlayerDataDAO;
 import us.eunoians.mcrpg.database.table.LoadoutInfoDAO;
 import us.eunoians.mcrpg.database.table.PlayerSettingDAO;
@@ -70,8 +71,10 @@ public class McRPGDatabase extends Database {
                             + (SkillDAO.attemptCreateTable(connection, database) ? "created a new table." : "already existed so skipping creation."));
                     logger.log(Level.INFO, "Database Creation - Loadout Info DAO "
                             + (LoadoutInfoDAO.attemptCreateTable(connection, database) ? "created a new table." : "already existed so skipping creation."));
-                    logger.log(Level.INFO, "Database Creation - Loadout DAO "
+                    logger.log(Level.INFO, "Database Creation - Loadout Ability DAO "
                             + (LoadoutAbilityDAO.attemptCreateTable(connection, database) ? "created a new table." : "already existed so skipping creation."));
+                    logger.log(Level.INFO, "Database Creation - Loadout Display DAO "
+                            + (LoadoutDisplayDAO.attemptCreateTable(connection, database) ? "created a new table." : "already existed so skipping creation."));
                     logger.log(Level.INFO, "Database Creation - Player Data DAO "
                             + (PlayerDataDAO.attemptCreateTable(connection, database) ? "created a new table." : "already existed so skipping creation."));
                     logger.log(Level.INFO, "Database Creation - Player Setting DAO "
@@ -95,6 +98,7 @@ public class McRPGDatabase extends Database {
                     SkillDAO.updateTable(connection);
                     LoadoutInfoDAO.updateTable(connection);
                     LoadoutAbilityDAO.updateTable(connection);
+                    LoadoutDisplayDAO.updateTable(connection);
                     PlayerDataDAO.updateTable(connection);
                     PlayerSettingDAO.updateTable(connection);
                     completableFuture.complete(null);

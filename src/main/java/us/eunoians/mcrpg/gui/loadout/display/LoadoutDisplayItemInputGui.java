@@ -105,6 +105,9 @@ public class LoadoutDisplayItemInputGui extends Gui implements ClosableGui {
     @Override
     public void paintInventory() {
         for (int i = 0; i < inventory.getSize(); i++) {
+            if (i == INPUT_SLOT) {
+                continue;
+            }
             setSlot(i, FILLER_GLASS_SLOT);
         }
         for (int i : PURPLE_SLOTS) {
