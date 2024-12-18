@@ -1,7 +1,7 @@
 package us.eunoians.mcrpg.command.admin.reset;
 
 import com.diamonddagger590.mccore.database.Database;
-import com.diamonddagger590.mccore.database.transaction.FailsafeTransaction;
+import com.diamonddagger590.mccore.database.transaction.FailSafeTransaction;
 import com.diamonddagger590.mccore.task.core.CoreTask;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.audience.Audience;
@@ -65,7 +65,7 @@ public class ResetPlayerCommand extends ResetBaseCommand {
                                 Database database = mcRPG.getDatabase();
                                 database.getDatabaseExecutorService().submit(() -> {
                                     try (Connection connection = database.getConnection()) {
-                                        new FailsafeTransaction(connection, SkillDAO.saveAllSkillHolderInformation(connection, skillHolder)).executeTransaction();
+                                        new FailSafeTransaction(connection, SkillDAO.saveAllSkillHolderInformation(connection, skillHolder)).executeTransaction();
                                     } catch (SQLException e) {
                                         // Go back to main thread
                                         new CoreTask(mcRPG) {

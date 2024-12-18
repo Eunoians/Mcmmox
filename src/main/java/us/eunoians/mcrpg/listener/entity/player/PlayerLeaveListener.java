@@ -23,6 +23,8 @@ public class PlayerLeaveListener implements Listener {
         if (playerManager.getPlayer(player.getUniqueId()).isPresent() && playerManager.getPlayer(player.getUniqueId()).get() instanceof McRPGPlayer mcRPGPlayer) {
             new McRPGPlayerUnloadTask(McRPG.getInstance(), mcRPGPlayer).runTask();
         }
-        LunarUtils.clearCooldowns(player.getUniqueId());
+        if (McRPG.getInstance().isLunarEnabled()) {
+            LunarUtils.clearCooldowns(player.getUniqueId());
+        }
     }
 }

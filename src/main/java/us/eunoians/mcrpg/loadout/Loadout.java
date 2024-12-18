@@ -1,8 +1,10 @@
 package us.eunoians.mcrpg.loadout;
 
 import com.google.common.collect.ImmutableSet;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.ability.impl.Ability;
 import us.eunoians.mcrpg.ability.impl.ActiveAbility;
@@ -25,22 +27,37 @@ import java.util.UUID;
  * <p>
  * A loadout also has a restriction where it can only possess one {@link ActiveAbility} per {@link us.eunoians.mcrpg.skill.Skill}.
  */
-public class Loadout {
+public final class Loadout {
 
     private final UUID loadoutHolder;
     private final int loadoutSlot;
     private final Set<NamespacedKey> abilities;
+    @Nullable
+    private String loadoutName;
+    @NotNull
+    private LoadoutDisplay loadoutDisplay;
 
     public Loadout(@NotNull UUID loadoutHolder, int loadoutSlot) {
         this.loadoutHolder = loadoutHolder;
         this.loadoutSlot = loadoutSlot;
         this.abilities = new HashSet<>();
+        this.loadoutName = null;
+        this.loadoutDisplay = getDefaultDisplayItem();
     }
 
     public Loadout(@NotNull UUID loadoutHolder, int loadoutSlot, @NotNull Set<NamespacedKey> abilities) {
         this.loadoutHolder = loadoutHolder;
         this.loadoutSlot = loadoutSlot;
         this.abilities = abilities;
+        this.loadoutName = null;
+        this.loadoutDisplay = getDefaultDisplayItem();
+    }
+
+    public Loadout(@NotNull UUID loadoutHolder, int loadoutSlot, @NotNull Set<NamespacedKey> abilities, @NotNull LoadoutDisplay loadoutDisplay) {
+        this.loadoutHolder = loadoutHolder;
+        this.loadoutSlot = loadoutSlot;
+        this.abilities = abilities;
+        this.loadoutDisplay = loadoutDisplay;
     }
 
     /**
@@ -175,6 +192,34 @@ public class Loadout {
     }
 
     /**
+     * Gets the {@link LoadoutDisplay} used to display this loadout.
+     *
+     * @return The {@link LoadoutDisplay} used to display this loadout.
+     */
+    @NotNull
+    public LoadoutDisplay getDisplay() {
+        return loadoutDisplay;
+    }
+
+    /**
+     * Sets the {@link LoadoutDisplay} used to display this loadout.
+     *
+     * @param loadoutDisplay The {@link LoadoutDisplay} used to display this loadout.
+     */
+    public void setLoadoutDisplay(@NotNull LoadoutDisplay loadoutDisplay) {
+        this.loadoutDisplay = loadoutDisplay;
+    }
+
+    /**
+     * Checks to see if the {@link LoadoutDisplay} for this loadout needs to be saved.
+     *
+     * @return {@code true} if the {@link LoadoutDisplay} for this loadout needs to be saved.
+     */
+    public boolean shouldSaveDisplay() {
+        return !loadoutDisplay.equals(getDefaultDisplayItem());
+    }
+
+    /**
      * Gets the maximum size of a loadout.
      *
      * @return The maximum size of a loadout.
@@ -182,4 +227,14 @@ public class Loadout {
     private int getMaxLoadoutSize() {
         return McRPG.getInstance().getFileManager().getFile(FileType.MAIN_CONFIG).getInt(MainConfigFile.MAX_LOADOUT_SIZE);
     }
+
+    /**
+     * Gets the default {@link LoadoutDisplay} for loadouts.
+     *
+     * @return The default {@link LoadoutDisplay} for loadouts.
+     */
+    private LoadoutDisplay getDefaultDisplayItem() {
+        return new LoadoutDisplay(Material.CHERRY_SIGN, null, "<gray>Loadout <gold>" + getLoadoutSlot());
+    }
+
 }

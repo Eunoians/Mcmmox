@@ -15,7 +15,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
-import us.eunoians.mcrpg.gui.loadout.LoadoutGui;
+import us.eunoians.mcrpg.gui.loadout.display.LoadoutDisplayHomeGui;
 import us.eunoians.mcrpg.loadout.Loadout;
 
 import java.util.ArrayList;
@@ -63,7 +63,7 @@ public class ToggleLoadoutActiveSlot extends Slot {
 
     @Override
     public Set<Class<? extends Gui>> getValidGuiTypes() {
-        return Set.of(LoadoutGui.class);
+        return Set.of(LoadoutDisplayHomeGui.class);
     }
 
     @Override

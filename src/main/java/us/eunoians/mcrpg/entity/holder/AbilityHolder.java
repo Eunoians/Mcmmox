@@ -43,6 +43,7 @@ import java.util.UUID;
  */
 public class AbilityHolder {
 
+    private final McRPG plugin;
     private final UUID uuid;
     private final Set<NamespacedKey> availableAbilities;
     private final Map<NamespacedKey, AbilityData> abilityDataMap;
@@ -52,7 +53,8 @@ public class AbilityHolder {
     private Optional<ReadyData> readiedAbility;
     private int readiedAbilityExpireTaskId;
 
-    public AbilityHolder(@NotNull UUID uuid) {
+    public AbilityHolder(@NotNull McRPG mcRPG, @NotNull UUID uuid) {
+        this.plugin = mcRPG;
         this.uuid = uuid;
         this.availableAbilities = new HashSet<>();
         this.abilityDataMap = new HashMap<>();
@@ -60,6 +62,11 @@ public class AbilityHolder {
         this.activeAbilities = new HashSet<>();
         this.upgradePoints = 0;
         this.readiedAbility = Optional.empty();
+    }
+
+    @NotNull
+    public McRPG getPlugin() {
+        return plugin;
     }
 
     /**

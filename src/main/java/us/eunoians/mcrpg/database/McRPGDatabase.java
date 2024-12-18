@@ -6,8 +6,10 @@ import com.diamonddagger590.mccore.database.Database;
 import com.diamonddagger590.mccore.database.driver.DatabaseDriverType;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
+import us.eunoians.mcrpg.database.table.LoadoutAbilityDAO;
+import us.eunoians.mcrpg.database.table.LoadoutDisplayDAO;
 import us.eunoians.mcrpg.database.table.PlayerDataDAO;
-import us.eunoians.mcrpg.database.table.PlayerLoadoutDAO;
+import us.eunoians.mcrpg.database.table.LoadoutInfoDAO;
 import us.eunoians.mcrpg.database.table.PlayerSettingDAO;
 import us.eunoians.mcrpg.database.table.SkillDAO;
 
@@ -67,8 +69,12 @@ public class McRPGDatabase extends Database {
                 try (Connection connection = database.getConnection()) {
                     logger.log(Level.INFO, "Database Creation - Skill DAO "
                             + (SkillDAO.attemptCreateTable(connection, database) ? "created a new table." : "already existed so skipping creation."));
-                    logger.log(Level.INFO, "Database Creation - Player Loadout DAO "
-                            + (PlayerLoadoutDAO.attemptCreateTable(connection, database) ? "created a new table." : "already existed so skipping creation."));
+                    logger.log(Level.INFO, "Database Creation - Loadout Info DAO "
+                            + (LoadoutInfoDAO.attemptCreateTable(connection, database) ? "created a new table." : "already existed so skipping creation."));
+                    logger.log(Level.INFO, "Database Creation - Loadout Ability DAO "
+                            + (LoadoutAbilityDAO.attemptCreateTable(connection, database) ? "created a new table." : "already existed so skipping creation."));
+                    logger.log(Level.INFO, "Database Creation - Loadout Display DAO "
+                            + (LoadoutDisplayDAO.attemptCreateTable(connection, database) ? "created a new table." : "already existed so skipping creation."));
                     logger.log(Level.INFO, "Database Creation - Player Data DAO "
                             + (PlayerDataDAO.attemptCreateTable(connection, database) ? "created a new table." : "already existed so skipping creation."));
                     logger.log(Level.INFO, "Database Creation - Player Setting DAO "
@@ -90,7 +96,9 @@ public class McRPGDatabase extends Database {
             database.getDatabaseExecutorService().submit(() -> {
                 try (Connection connection = database.getConnection()) {
                     SkillDAO.updateTable(connection);
-                    PlayerLoadoutDAO.updateTable(connection);
+                    LoadoutInfoDAO.updateTable(connection);
+                    LoadoutAbilityDAO.updateTable(connection);
+                    LoadoutDisplayDAO.updateTable(connection);
                     PlayerDataDAO.updateTable(connection);
                     PlayerSettingDAO.updateTable(connection);
                     completableFuture.complete(null);

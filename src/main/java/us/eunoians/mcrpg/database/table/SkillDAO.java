@@ -37,7 +37,6 @@ public class SkillDAO {
     private static final Logger LOGGER = McRPG.getInstance().getLogger();
 
     private static final String SKILL_DATA_TABLE_NAME = "mcrpg_skill_data";
-    private static final String ABILITY_TOGGLED_OFF_TABLE_NAME = "mcrpg_toggled_off_abilities";
     private static final String ABILITY_ATTRIBUTE_TABLE_NAME = "mcrpg_ability_attributes";
     private static final int CURRENT_TABLE_VERSION = 1;
 

@@ -4,7 +4,6 @@ import com.diamonddagger590.mccore.CorePlugin;
 import com.diamonddagger590.mccore.command.DisplayNameCommand;
 import com.diamonddagger590.mccore.command.LoreCommand;
 import com.diamonddagger590.mccore.database.driver.DatabaseDriverType;
-import com.diamonddagger590.mccore.database.table.impl.MutexDAO;
 import com.diamonddagger590.mccore.player.CorePlayer;
 import com.diamonddagger590.mccore.player.PlayerManager;
 import com.jeff_media.customblockdata.CustomBlockData;
@@ -32,8 +31,6 @@ import us.eunoians.mcrpg.command.quest.TestQuestStartCommand;
 import us.eunoians.mcrpg.configuration.FileManager;
 import us.eunoians.mcrpg.database.McRPGDatabase;
 import us.eunoians.mcrpg.database.driver.McRPGSqliteDriver;
-import us.eunoians.mcrpg.database.table.PlayerLoadoutDAO;
-import us.eunoians.mcrpg.database.table.SkillDAO;
 import us.eunoians.mcrpg.display.DisplayManager;
 import us.eunoians.mcrpg.entity.EntityManager;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
@@ -158,14 +155,9 @@ public class McRPG extends CorePlugin {
             try (Connection connection = getDatabase().getConnection()) {
                 for (CorePlayer corePlayer : playerManager.getAllPlayers()) {
                     if (corePlayer instanceof McRPGPlayer mcRPGPlayer) {
-                        // TODO make this one thing so it isnt in two spots
-                        SkillDAO.savePlayerSkillData(connection, mcRPGPlayer.asSkillHolder());
-                        PlayerLoadoutDAO.saveAllPlayerLoadouts(connection, mcRPGPlayer.asSkillHolder());
+                        mcRPGPlayer.savePlayer(connection);
                         if (isLunarEnabled()) {
                             LunarUtils.clearCooldowns(mcRPGPlayer.getUUID());
-                        }
-                        if (mcRPGPlayer.useMutex()) {
-                            MutexDAO.updateUserMutex(connection, mcRPGPlayer.getUUID(), false);
                         }
                     }
                 }
