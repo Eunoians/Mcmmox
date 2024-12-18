@@ -5,7 +5,6 @@ import com.diamonddagger590.mccore.database.table.impl.TableVersionHistoryDAO;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
-import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.entity.holder.LoadoutHolder;
 import us.eunoians.mcrpg.loadout.Loadout;
 import us.eunoians.mcrpg.loadout.LoadoutDisplay;
@@ -113,21 +112,19 @@ public class LoadoutDisplayDAO {
 
     @NotNull
     public static List<PreparedStatement> saveLoadoutDisplay(@NotNull Connection connection, @NotNull UUID loadoutHolderUUID, @NotNull Loadout loadout) {
-        return loadout.shouldSaveDisplay() ? saveLoadoutDisplay(connection, loadoutHolderUUID, loadout.getLoadoutSlot(), loadout.getDisplay()) : deleteLoadoutDisplay(connection, loadoutHolderUUID, loadout.getLoadoutSlot());
+        return loadout.shouldSaveDisplay() ? saveLoadoutDisplay(connection, loadoutHolderUUID, loadout.getLoadoutSlot(), loadout.getDisplay()) : List.of();
     }
 
     @NotNull
     public static List<PreparedStatement> saveLoadoutDisplay(@NotNull Connection connection, @NotNull UUID loadoutHolderUUID, int loadoutSlot, @NotNull LoadoutDisplay loadoutDisplay) {
-        Bukkit.broadcastMessage("4");
         List<PreparedStatement> statements = new ArrayList<>();
         try {
-            Bukkit.broadcastMessage("5");
             PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + TABLE_NAME + " (holder_uuid, loadout_id, display_material, custom_model_data, display_name) VALUES (?, ?, ?, ?, ?)");
             preparedStatement.setString(1, loadoutHolderUUID.toString());
             preparedStatement.setInt(2, loadoutSlot);
             preparedStatement.setString(3, loadoutDisplay.getMaterial().toString());
             preparedStatement.setInt(4, loadoutDisplay.getCustomModelData().orElse(0));
-            preparedStatement.setString(5, loadoutDisplay.getDisplayName().isPresent() ? loadoutDisplay.getDisplayName().get().toString() : null);
+            preparedStatement.setString(5, loadoutDisplay.getDisplayName().isPresent() ? loadoutDisplay.getDisplayName().get() : null);
             statements.add(preparedStatement);
         }
         catch (SQLException e) {
@@ -163,7 +160,7 @@ public class LoadoutDisplayDAO {
                 int customModelData = resultSet.getInt("custom_model_data");
                 String displayName = resultSet.getString("display_name");
                 if (material != null) {
-                    loadoutDisplayOptional = Optional.of(new LoadoutDisplay(material, customModelData, displayName != null ? McRPG.getInstance().getMiniMessage().deserialize(displayName) : null));
+                    loadoutDisplayOptional = Optional.of(new LoadoutDisplay(material, customModelData, displayName));
                 }
             }
         }

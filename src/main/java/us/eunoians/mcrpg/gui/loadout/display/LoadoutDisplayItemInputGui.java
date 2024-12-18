@@ -129,7 +129,6 @@ public class LoadoutDisplayItemInputGui extends Gui implements ClosableGui {
 
     @Override
     public void onClose(InventoryCloseEvent inventoryCloseEvent) {
-        Bukkit.broadcastMessage("on close");
         if (save) {
             saveLoadoutDisplayItem();
         }
@@ -147,6 +146,11 @@ public class LoadoutDisplayItemInputGui extends Gui implements ClosableGui {
             McRPG.getInstance().getGuiTracker().trackPlayerGui(mcRPGPlayer, loadoutDisplayHomeGui);
             player.openInventory(loadoutDisplayHomeGui.getInventory());
         }, 1L);
+    }
+
+    @Override
+    public boolean allowBottomInventoryClick() {
+        return true;
     }
 
     /**

@@ -1,11 +1,11 @@
 package us.eunoians.mcrpg.loadout;
 
-import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import us.eunoians.mcrpg.McRPG;
 
 import java.util.Optional;
 
@@ -20,15 +20,15 @@ public final class LoadoutDisplay implements Cloneable {
     @Nullable
     private Integer customModelData;
     @Nullable
-    private Component displayName;
+    private String displayName;
 
-    public LoadoutDisplay(@NotNull ItemStack itemStack, @NotNull Component displayName) {
+    public LoadoutDisplay(@NotNull ItemStack itemStack, @NotNull String displayName) {
         this.material = itemStack.getType();
         this.customModelData = itemStack.getItemMeta().hasItemName() ? itemStack.getItemMeta().getCustomModelData() : null;
         this.displayName = displayName;
     }
 
-    public LoadoutDisplay(@NotNull Material material, @Nullable Integer customModelData, @Nullable Component displayName) {
+    public LoadoutDisplay(@NotNull Material material, @Nullable Integer customModelData, @Nullable String displayName) {
         this.material = material;
         this.customModelData = customModelData;
         this.displayName = displayName;
@@ -67,9 +67,9 @@ public final class LoadoutDisplay implements Cloneable {
     /**
      * Sets the display name for this display.
      *
-     * @param displayName The {@link Component} to use as a display name.
+     * @param displayName The {@link String} to use as a display name.
      */
-    public void setDisplayName(@Nullable Component displayName) {
+    public void setDisplayName(@Nullable String displayName) {
         this.displayName = displayName;
     }
 
@@ -95,13 +95,13 @@ public final class LoadoutDisplay implements Cloneable {
     }
 
     /**
-     * Gets the {@link Component} used as the display name for the display.
+     * Gets the {@link String} used as the display name for the display.
      *
      * @return An {@link Optional} containing the {@link Optional} used as the display name for the display, or an empty
      * one if the default display name should be used.
      */
     @NotNull
-    public Optional<Component> getDisplayName() {
+    public Optional<String> getDisplayName() {
         return Optional.ofNullable(displayName);
     }
 
@@ -118,7 +118,7 @@ public final class LoadoutDisplay implements Cloneable {
             itemMeta.setCustomModelData(customModelData);
         }
         if (displayName != null) {
-            itemMeta.displayName(displayName);
+            itemMeta.displayName(getMcRPG().getMiniMessage().deserialize(displayName));
         }
         itemStack.setItemMeta(itemMeta);
         return itemStack;
@@ -138,5 +138,9 @@ public final class LoadoutDisplay implements Cloneable {
     @Override
     protected Object clone() {
         return new LoadoutDisplay(material, customModelData, displayName);
+    }
+
+    private McRPG getMcRPG() {
+        return McRPG.getInstance();
     }
 }

@@ -29,11 +29,8 @@ public class LoadoutDisplayItemSlot extends Slot {
 
     @Override
     public boolean onClick(@NotNull CorePlayer corePlayer, @NotNull ClickType clickType) {
-        Bukkit.broadcastMessage("1");
         corePlayer.getAsBukkitPlayer().ifPresent(player -> {
-            Bukkit.broadcastMessage("2");
             if (corePlayer instanceof McRPGPlayer mcRPGPlayer) {
-                Bukkit.broadcastMessage("3");
                 player.closeInventory();
                 LoadoutDisplayItemInputGui loadoutDisplayItemInputGui = new LoadoutDisplayItemInputGui(mcRPGPlayer, loadout);
                 McRPG.getInstance().getGuiTracker().trackPlayerGui(mcRPGPlayer, loadoutDisplayItemInputGui);

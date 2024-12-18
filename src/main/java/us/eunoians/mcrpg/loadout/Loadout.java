@@ -13,7 +13,6 @@ import us.eunoians.mcrpg.configuration.FileType;
 import us.eunoians.mcrpg.configuration.file.MainConfigFile;
 import us.eunoians.mcrpg.exception.loadout.LoadoutAlreadyHasActiveAbilityException;
 import us.eunoians.mcrpg.exception.loadout.LoadoutMaxSizeExceededException;
-import us.eunoians.mcrpg.util.McRPGMethods;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -217,7 +216,7 @@ public final class Loadout {
      * @return {@code true} if the {@link LoadoutDisplay} for this loadout needs to be saved.
      */
     public boolean shouldSaveDisplay() {
-        return loadoutDisplay.equals(getDefaultDisplayItem());
+        return !loadoutDisplay.equals(getDefaultDisplayItem());
     }
 
     /**
@@ -235,7 +234,7 @@ public final class Loadout {
      * @return The default {@link LoadoutDisplay} for loadouts.
      */
     private LoadoutDisplay getDefaultDisplayItem() {
-        return new LoadoutDisplay(Material.CHERRY_SIGN, null, McRPGMethods.translate("<gray>Loadout <gold>" + getLoadoutSlot()));
+        return new LoadoutDisplay(Material.CHERRY_SIGN, null, "<gray>Loadout <gold>" + getLoadoutSlot());
     }
 
 }

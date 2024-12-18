@@ -74,7 +74,7 @@ public class LoadoutDisplayHomeGui extends Gui {
         if (this.inventory != null) {
             throw new InventoryAlreadyExistsForGuiException(this);
         } else {
-            this.inventory = Bukkit.createInventory(player, 27, loadout.getDisplay().getDisplayName().orElse(McRPG.getInstance().getMiniMessage().deserialize("<gold>Editing Loadout")));
+            this.inventory = Bukkit.createInventory(player, 27, McRPG.getInstance().getMiniMessage().deserialize(loadout.getDisplay().getDisplayName().orElse("<gold>Editing Loadout")));
             paintInventory();
         }
     }

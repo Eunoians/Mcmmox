@@ -29,7 +29,7 @@ public class LoadoutDisplayNameChatResponse extends ChatResponse {
     @Override
     public void onResponse(@NotNull PlayerChatEvent playerChatEvent) {
         LoadoutDisplay loadoutDisplay = loadout.getDisplay();
-        loadoutDisplay.setDisplayName(McRPG.getInstance().getMiniMessage().deserialize(playerChatEvent.getMessage()));
+        loadoutDisplay.setDisplayName(playerChatEvent.getMessage());
         Player player = playerChatEvent.getPlayer();
         McRPG.getInstance().getPlayerManager().getPlayer(player.getUniqueId()).ifPresent(corePlayer -> {
             if (corePlayer instanceof McRPGPlayer mcRPGPlayer) {
