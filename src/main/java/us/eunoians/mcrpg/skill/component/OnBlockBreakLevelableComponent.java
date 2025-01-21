@@ -5,8 +5,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.jetbrains.annotations.NotNull;
+import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.entity.holder.SkillHolder;
-import us.eunoians.mcrpg.world.WorldManager;
 
 public interface OnBlockBreakLevelableComponent extends EventLevelableComponent {
 
@@ -17,7 +17,7 @@ public interface OnBlockBreakLevelableComponent extends EventLevelableComponent 
         if (event instanceof BlockBreakEvent blockBreakEvent) {
             Player player = blockBreakEvent.getPlayer();
             Block block = blockBreakEvent.getBlock();
-            return player.getUniqueId().equals(skillHolder.getUUID()) && affectsBlock(block) && WorldManager.isBlockNatural(block);
+            return player.getUniqueId().equals(skillHolder.getUUID()) && affectsBlock(block) && McRPG.getInstance().getWorldManager().isBlockNatural(block);
         }
         return false;
     }

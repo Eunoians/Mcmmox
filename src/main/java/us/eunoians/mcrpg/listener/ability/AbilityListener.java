@@ -42,7 +42,13 @@ public interface AbilityListener extends Listener {
         EntityManager entityManager = mcRPG.getEntityManager();
         AbilityRegistry abilityRegistry = mcRPG.getAbilityRegistry();
 
+
         entityManager.getAbilityHolder(uuid).ifPresent(abilityHolder -> {
+
+            // Validate that the holder currently can use McRPG
+            if (!mcRPG.getWorldManager().isMcRPGEnabledForHolder(abilityHolder)) {
+                return;
+            }
 
             /*
              * We can do this without too much of an impact on performance due to two assumptions.
@@ -79,6 +85,11 @@ public interface AbilityListener extends Listener {
         AbilityRegistry abilityRegistry = mcRPG.getAbilityRegistry();
 
         entityManager.getAbilityHolder(uuid).ifPresent(abilityHolder -> {
+
+            // Validate that the holder currently can use McRPG
+            if (!mcRPG.getWorldManager().isMcRPGEnabledForHolder(abilityHolder)) {
+                return;
+            }
 
             // Check if the player requires empty offhand
             var playerOptional = playerManager.getPlayer(uuid);

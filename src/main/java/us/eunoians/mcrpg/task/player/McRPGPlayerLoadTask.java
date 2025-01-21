@@ -1,4 +1,4 @@
-package us.eunoians.mcrpg.task;
+package us.eunoians.mcrpg.task.player;
 
 import com.diamonddagger590.mccore.task.PlayerLoadTask;
 import org.bukkit.ChatColor;

@@ -9,6 +9,7 @@ public class MainConfigFile extends ConfigFile {
     // Headers
     private static final Route CONFIGURATION_HEADER = Route.fromString("configuration");
     private static final Route ADMIN_CONFIGURATION_HEADER = Route.addTo(CONFIGURATION_HEADER, "admin");
+    private static final Route SAVE_TASK_HEADER = Route.addTo(CONFIGURATION_HEADER, "save-task");
     private static final Route EXPERIENCE_CONFIGURATION_HEADER = Route.addTo(CONFIGURATION_HEADER, "experience");
     private static final Route BOOSTED_EXPERIENCE_CONFIGURATION_HEADER = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "boosted-experience");
     private static final Route MODIFY_MOB_SPAWN_EXPERIENCE_CONFIGURATION_HEADER = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, ".modify-mob-spawn-experience");
@@ -19,22 +20,31 @@ public class MainConfigFile extends ConfigFile {
     private static final Route LOADOUT_CONFIGURATION_HEADER = Route.addTo(GAMEPLAY_CONFIGURATION_HEADER, "loadout");
     private static final Route MOB_HEALTH_BAR_CONFIGURATION_HEADER = Route.addTo(GAMEPLAY_CONFIGURATION_HEADER, "mob-health-bar");
     private static final Route MCMMO_CONFIGURATION_HEADER = Route.addTo(CONFIGURATION_HEADER, "mcmmo");
-
     private static final Route DATABASE_HEADER = Route.addTo(CONFIGURATION_HEADER, "database");
+
+    // Database fields
     public static final Route DATABASE_DRIVER = Route.addTo(DATABASE_HEADER, "driver");
+
+    // General Configuration fields
     public static final Route DISABLED_WORLDS = Route.addTo(CONFIGURATION_HEADER, "disabled-worlds");
-    public static final Route SAVE_INTERVAL = Route.addTo(CONFIGURATION_HEADER, "save-interval");
     public static final Route LANGUAGE_FILE = Route.addTo(CONFIGURATION_HEADER, "language-file");
     public static final Route DISABLE_TIPS = Route.addTo(CONFIGURATION_HEADER, "disable-tips");
     public static final Route ENABLE_ABILITY_SPY = Route.addTo(ADMIN_CONFIGURATION_HEADER, "enable-ability-spy");
+
+    // Save task fields
+    public static final Route SAVE_TASK_FREQUENCY = Route.addTo(SAVE_TASK_HEADER, "frequency");
+
+    //Experience fields
     public static final Route MAX_DAMAGE_CAP_TO_AWARD_EXPERIENCE = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "max-damage-cap-to-award-exp");
     public static final Route EXPERIENCE_MULTIPLIER_LIMIT = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "exp-multiplier-limit");
     public static final Route SHIELD_BLOCKING_MODIFIER = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "shield-blocking-modifier");
+    public static final Route RESET_EXPERIENCE_UPON_REDEEM_LEVELS = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "reset-exp-upon-redeemed-levels");
     public static final Route DISABLE_EXPERIENCE_FROM_ENDER_PEARLS = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "disable-experience-from-ender-pearls");
     public static final Route BOOSTED_EXPERIENCE_USAGE_RATE = Route.addTo(BOOSTED_EXPERIENCE_CONFIGURATION_HEADER, "usage-rate");
+
+    // Spawner fields
     public static final Route MODIFY_MOB_SPAWN_EXPERIENCE_FROM_SPAWNER = Route.addTo(MODIFY_MOB_SPAWN_EXPERIENCE_CONFIGURATION_HEADER, "spawner");
     public static final Route MODIFY_MOB_SPAWN_EXPERIENCE_FROM_SPAWN_EGG = Route.addTo(MODIFY_MOB_SPAWN_EXPERIENCE_CONFIGURATION_HEADER, "spawn-egg");
-    public static final Route RESET_EXPERIENCE_UPON_REDEEM_LEVELS = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "reset-exp-upon-redeemed-levels");
     public static final Route DISABLE_SKILL_BOOKS_IN_END = Route.addTo(SKILL_BOOKS_CONFIGURATION_HEADER, "disable-books-in-end");
     public static final Route EXPERIENCE_UPDATES_ENABLED = Route.addTo(DISPLAY_EXPERIENCE_CONFIGURATION_HEADER, "enabled");
     public static final Route EXPERIENCE_UPDATE_DISPLAY_TYPE = Route.addTo(DISPLAY_EXPERIENCE_CONFIGURATION_HEADER, "display-type");

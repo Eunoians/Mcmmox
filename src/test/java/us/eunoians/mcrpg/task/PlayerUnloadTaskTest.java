@@ -20,6 +20,7 @@ import us.eunoians.mcrpg.entity.EntityManager;
 import us.eunoians.mcrpg.entity.holder.SkillHolder;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
 import us.eunoians.mcrpg.listener.entity.player.PlayerLeaveListener;
+import us.eunoians.mcrpg.task.player.McRPGPlayerUnloadTask;
 import us.eunoians.mcrpg.util.TestUtils;
 
 import java.sql.Connection;

@@ -1,4 +1,4 @@
-package us.eunoians.mcrpg.task;
+package us.eunoians.mcrpg.task.player;
 
 import com.diamonddagger590.mccore.player.CorePlayer;
 import com.diamonddagger590.mccore.player.PlayerManager;

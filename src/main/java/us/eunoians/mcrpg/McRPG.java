@@ -3,6 +3,7 @@ package us.eunoians.mcrpg;
 import com.diamonddagger590.mccore.CorePlugin;
 import com.diamonddagger590.mccore.command.DisplayNameCommand;
 import com.diamonddagger590.mccore.command.LoreCommand;
+import com.diamonddagger590.mccore.configuration.ReloadableTask;
 import com.diamonddagger590.mccore.database.driver.DatabaseDriverType;
 import com.diamonddagger590.mccore.player.CorePlayer;
 import com.diamonddagger590.mccore.player.PlayerManager;
@@ -29,6 +30,8 @@ import us.eunoians.mcrpg.command.loadout.LoadoutEditCommand;
 import us.eunoians.mcrpg.command.loadout.LoadoutSetCommand;
 import us.eunoians.mcrpg.command.quest.TestQuestStartCommand;
 import us.eunoians.mcrpg.configuration.FileManager;
+import us.eunoians.mcrpg.configuration.FileType;
+import us.eunoians.mcrpg.configuration.file.MainConfigFile;
 import us.eunoians.mcrpg.database.McRPGDatabase;
 import us.eunoians.mcrpg.database.driver.McRPGSqliteDriver;
 import us.eunoians.mcrpg.display.DisplayManager;
@@ -63,13 +66,14 @@ import us.eunoians.mcrpg.listener.quest.QuestObjectiveCompleteListener;
 import us.eunoians.mcrpg.listener.skill.OnAttackLevelListener;
 import us.eunoians.mcrpg.listener.skill.OnBlockBreakLevelListener;
 import us.eunoians.mcrpg.listener.skill.OnSkillLevelUpListener;
-import us.eunoians.mcrpg.listener.world.BlockPlaceListener;
 import us.eunoians.mcrpg.listener.world.FakeBlockBreakListener;
 import us.eunoians.mcrpg.papi.McRPGPapiExpansion;
 import us.eunoians.mcrpg.quest.QuestManager;
 import us.eunoians.mcrpg.setting.PlayerSettingRegistry;
 import us.eunoians.mcrpg.skill.SkillRegistry;
+import us.eunoians.mcrpg.task.player.McRPGPlayerSaveTask;
 import us.eunoians.mcrpg.util.LunarUtils;
+import us.eunoians.mcrpg.world.WorldManager;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -98,6 +102,7 @@ public class McRPG extends CorePlugin {
     private BleedManager bleedManager;
     private PlayerSettingRegistry playerSettingRegistry;
     private ContentExpansionManager contentExpansionManager;
+    private WorldManager worldManager;
 
     private GlowingBlocks glowingBlocks;
     private GlowingEntities glowingEntities;
@@ -123,7 +128,6 @@ public class McRPG extends CorePlugin {
 
         entityManager = new EntityManager(this);
         playerManager = new PlayerManager(this);
-
         abilityRegistry = new AbilityRegistry(this);
         skillRegistry = new SkillRegistry(this);
 
@@ -133,6 +137,7 @@ public class McRPG extends CorePlugin {
         bleedManager = new BleedManager(this);
         playerSettingRegistry = new PlayerSettingRegistry();
         contentExpansionManager = new ContentExpansionManager(this);
+        worldManager = new WorldManager(this);
 
         if (!isUnitTest()) {
             registerNativeExpansions();
@@ -143,6 +148,7 @@ public class McRPG extends CorePlugin {
             database = new McRPGDatabase(this, DatabaseDriverType.SQLITE);
             registerListeners();
             constructCommands();
+            registerBackgroundTasks();
             reloadableContentRegistry.reloadAllContent();
         }
     }
@@ -161,8 +167,7 @@ public class McRPG extends CorePlugin {
                         }
                     }
                 }
-            }
-            catch (SQLException e) {
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
@@ -250,7 +255,6 @@ public class McRPG extends CorePlugin {
         Bukkit.getPluginManager().registerEvents(new QuestObjectiveCompleteListener(), this);
 
         // World listener
-        Bukkit.getPluginManager().registerEvents(new BlockPlaceListener(), this);
         Bukkit.getPluginManager().registerEvents(new FakeBlockBreakListener(), this);
         CustomBlockData.registerListener(this);
 
@@ -322,6 +326,15 @@ public class McRPG extends CorePlugin {
     private void registerNativeExpansions() {
         Arrays.stream(ContentHandlerType.values()).forEach(contentHandlerType -> contentExpansionManager.registerContentHandler(contentHandlerType.getContentHandler()));
         contentExpansionManager.registerContentExpansion(new McRPGExpansion(this));
+    }
+
+    private void registerBackgroundTasks() {
+        ReloadableTask<McRPGPlayerSaveTask> saveTask = new ReloadableTask<>(fileManager.getFile(FileType.MAIN_CONFIG), MainConfigFile.SAVE_TASK_FREQUENCY,
+                (yamlDocument, route) -> {
+                    int frequency = yamlDocument.getInt(route);
+                    return new McRPGPlayerSaveTask(this, frequency, frequency);
+                }, true);
+        reloadableContentRegistry.trackReloadableContent(saveTask);
     }
 
     /**
@@ -442,6 +455,16 @@ public class McRPG extends CorePlugin {
     @NotNull
     public ContentExpansionManager getContentExpansionManager() {
         return contentExpansionManager;
+    }
+
+    /**
+     * Gets the {@link WorldManager} used by McRPG.
+     *
+     * @return The {@link WorldManager} used by McRPG.
+     */
+    @NotNull
+    public WorldManager getWorldManager() {
+        return worldManager;
     }
 
     /**

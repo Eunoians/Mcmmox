@@ -7,7 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
-import us.eunoians.mcrpg.task.McRPGPlayerUnloadTask;
+import us.eunoians.mcrpg.task.player.McRPGPlayerUnloadTask;
 import us.eunoians.mcrpg.util.LunarUtils;
 
 /**

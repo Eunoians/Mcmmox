@@ -19,15 +19,14 @@ import us.eunoians.mcrpg.ability.McRPGAbility;
 import us.eunoians.mcrpg.ability.impl.ConfigurableTierableAbility;
 import us.eunoians.mcrpg.ability.impl.PassiveAbility;
 import us.eunoians.mcrpg.ability.impl.ReloadableContentAbility;
-import us.eunoians.mcrpg.event.ability.woodcutting.HeavySwingActivateEvent;
-import us.eunoians.mcrpg.event.ability.woodcutting.HeavySwingFakeBlockBreakEvent;
 import us.eunoians.mcrpg.configuration.FileType;
 import us.eunoians.mcrpg.configuration.file.skill.WoodcuttingConfigFile;
 import us.eunoians.mcrpg.entity.holder.AbilityHolder;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
+import us.eunoians.mcrpg.event.ability.woodcutting.HeavySwingActivateEvent;
+import us.eunoians.mcrpg.event.ability.woodcutting.HeavySwingFakeBlockBreakEvent;
 import us.eunoians.mcrpg.skill.impl.woodcutting.Woodcutting;
 import us.eunoians.mcrpg.util.McRPGMethods;
-import us.eunoians.mcrpg.world.WorldManager;
 
 import java.util.HashSet;
 import java.util.List;
@@ -112,7 +111,7 @@ public class HeavySwing extends McRPGAbility implements PassiveAbility, Configur
                     Location possibleBlockLocation = new Location(origin.getWorld(), origin.getX() + x, origin.getY() + y, origin.getZ() + z);
                     Block possibleBlock = possibleBlockLocation.getBlock();
                     // Only trigger on natural blocks and whenever the block is valid
-                    if (!origin.equals(possibleBlockLocation) && WorldManager.isBlockNatural(possibleBlock) && isBlockValid(possibleBlock)) {
+                    if (!origin.equals(possibleBlockLocation) && McRPG.getInstance().getWorldManager().isBlockNatural(possibleBlock) && isBlockValid(possibleBlock)) {
                         // Throw a fake block break event to check for protection checks
                         HeavySwingFakeBlockBreakEvent heavySwingFakeBlockBreakEvent = new HeavySwingFakeBlockBreakEvent(player, possibleBlock);
                         Bukkit.getPluginManager().callEvent(heavySwingFakeBlockBreakEvent);
