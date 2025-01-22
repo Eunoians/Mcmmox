@@ -2,7 +2,7 @@ package us.eunoians.mcrpg.task.player;
 
 import com.diamonddagger590.mccore.player.CorePlayer;
 import com.diamonddagger590.mccore.player.PlayerManager;
-import com.diamonddagger590.mccore.task.PlayerUnloadTask;
+import com.diamonddagger590.mccore.task.player.PlayerUnloadTask;
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.entity.holder.SkillHolder;

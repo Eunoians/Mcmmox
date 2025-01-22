@@ -1,6 +1,6 @@
 package us.eunoians.mcrpg.task.player;
 
-import com.diamonddagger590.mccore.task.PlayerLoadTask;
+import com.diamonddagger590.mccore.task.player.PlayerLoadTask;
 import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
