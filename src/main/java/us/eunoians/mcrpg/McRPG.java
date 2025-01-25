@@ -53,8 +53,9 @@ import us.eunoians.mcrpg.listener.ability.OnFoodLevelChangeAbilityListener;
 import us.eunoians.mcrpg.listener.ability.OnInteractAbilityListener;
 import us.eunoians.mcrpg.listener.ability.OnPlayerMoveAbilityListener;
 import us.eunoians.mcrpg.listener.ability.OnSneakAbilityListener;
-import us.eunoians.mcrpg.listener.entity.OnAbilityHolderReadyListener;
-import us.eunoians.mcrpg.listener.entity.OnAbilityHolderUnreadyListener;
+import us.eunoians.mcrpg.listener.entity.EntitySpawnListener;
+import us.eunoians.mcrpg.listener.entity.holder.OnAbilityHolderReadyListener;
+import us.eunoians.mcrpg.listener.entity.holder.OnAbilityHolderUnreadyListener;
 import us.eunoians.mcrpg.listener.entity.player.CorePlayerLoadListener;
 import us.eunoians.mcrpg.listener.entity.player.CorePlayerUnloadListener;
 import us.eunoians.mcrpg.listener.entity.player.PlayerJoinListener;
@@ -71,6 +72,9 @@ import us.eunoians.mcrpg.papi.McRPGPapiExpansion;
 import us.eunoians.mcrpg.quest.QuestManager;
 import us.eunoians.mcrpg.setting.PlayerSettingRegistry;
 import us.eunoians.mcrpg.skill.SkillRegistry;
+import us.eunoians.mcrpg.skill.experience.ExperienceModifierRegistry;
+import us.eunoians.mcrpg.skill.experience.modifier.HeldItemBonusModifier;
+import us.eunoians.mcrpg.skill.experience.modifier.SpawnReasonModifier;
 import us.eunoians.mcrpg.task.player.McRPGPlayerSaveTask;
 import us.eunoians.mcrpg.util.LunarUtils;
 import us.eunoians.mcrpg.world.WorldManager;
@@ -103,6 +107,7 @@ public class McRPG extends CorePlugin {
     private PlayerSettingRegistry playerSettingRegistry;
     private ContentExpansionManager contentExpansionManager;
     private WorldManager worldManager;
+    private ExperienceModifierRegistry experienceModifierRegistry;
 
     private GlowingBlocks glowingBlocks;
     private GlowingEntities glowingEntities;
@@ -138,6 +143,7 @@ public class McRPG extends CorePlugin {
         playerSettingRegistry = new PlayerSettingRegistry();
         contentExpansionManager = new ContentExpansionManager(this);
         worldManager = new WorldManager(this);
+        experienceModifierRegistry = new ExperienceModifierRegistry(this);
 
         if (!isUnitTest()) {
             registerNativeExpansions();
@@ -258,6 +264,9 @@ public class McRPG extends CorePlugin {
         Bukkit.getPluginManager().registerEvents(new FakeBlockBreakListener(), this);
         CustomBlockData.registerListener(this);
 
+        // Entity Listeners
+        Bukkit.getPluginManager().registerEvents(new EntitySpawnListener(), this);
+
         // Debug Listener
         Bukkit.getPluginManager().registerEvents(new OnAbilityActivateListener(), this);
 
@@ -328,6 +337,9 @@ public class McRPG extends CorePlugin {
         contentExpansionManager.registerContentExpansion(new McRPGExpansion(this));
     }
 
+    /**
+     * Register all background tasks that McROG uses.
+     */
     private void registerBackgroundTasks() {
         ReloadableTask<McRPGPlayerSaveTask> saveTask = new ReloadableTask<>(fileManager.getFile(FileType.MAIN_CONFIG), MainConfigFile.SAVE_TASK_FREQUENCY,
                 (yamlDocument, route) -> {
@@ -335,6 +347,14 @@ public class McRPG extends CorePlugin {
                     return new McRPGPlayerSaveTask(this, frequency, frequency);
                 }, true);
         reloadableContentRegistry.trackReloadableContent(saveTask);
+    }
+
+    /**
+     *
+     */
+    private void registerExperienceModifiers() {
+        experienceModifierRegistry.registerModifier(new HeldItemBonusModifier());
+        experienceModifierRegistry.registerModifier(new SpawnReasonModifier());
     }
 
     /**
@@ -465,6 +485,16 @@ public class McRPG extends CorePlugin {
     @NotNull
     public WorldManager getWorldManager() {
         return worldManager;
+    }
+
+    /**
+     * Gets the {@link ExperienceModifierRegistry} used by McRPG.
+     *
+     * @return The {@link ExperienceModifierRegistry} used by McRPG.
+     */
+    @NotNull
+    public ExperienceModifierRegistry getExperienceModifierRegistry() {
+        return experienceModifierRegistry;
     }
 
     /**

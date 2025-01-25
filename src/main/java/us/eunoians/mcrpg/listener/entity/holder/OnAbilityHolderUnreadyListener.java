@@ -1,4 +1,4 @@
-package us.eunoians.mcrpg.listener.entity;
+package us.eunoians.mcrpg.listener.entity.holder;
 
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
@@ -8,24 +8,23 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import us.eunoians.mcrpg.McRPG;
-import us.eunoians.mcrpg.event.entity.AbilityHolderReadyEvent;
+import us.eunoians.mcrpg.event.entity.AbilityHolderUnreadyEvent;
 import us.eunoians.mcrpg.entity.holder.AbilityHolder;
 
 /**
- * This listener notifies players whenever they ready for an ability.
+ * This listener handles notifying players that they are no longer ready for ability activation.
  */
-public class OnAbilityHolderReadyListener implements Listener {
+public class OnAbilityHolderUnreadyListener implements Listener {
 
     @EventHandler
-    public void onAbilityReady(AbilityHolderReadyEvent event) {
+    public void onAbilityUnready(AbilityHolderUnreadyEvent event) {
         AbilityHolder abilityHolder = event.getAbilityHolder();
         Player player = Bukkit.getPlayer(abilityHolder.getUUID());
-        if (player != null) {
+        if (player != null && event.didReadyAutoExpire()) {
             MiniMessage miniMessage = McRPG.getInstance().getMiniMessage();
             BukkitAudiences adventure = McRPG.getInstance().getAdventure();
             Audience audience = adventure.player(player);
-            audience.sendMessage(miniMessage.deserialize(event.getReadyData().getReadyMessage()));
+            audience.sendMessage(miniMessage.deserialize(event.getReadyData().getUnreadyMessage()));
         }
     }
-
 }

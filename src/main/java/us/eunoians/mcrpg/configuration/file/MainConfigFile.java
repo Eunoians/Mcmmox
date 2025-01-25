@@ -12,7 +12,6 @@ public class MainConfigFile extends ConfigFile {
     private static final Route SAVE_TASK_HEADER = Route.addTo(CONFIGURATION_HEADER, "save-task");
     private static final Route EXPERIENCE_CONFIGURATION_HEADER = Route.addTo(CONFIGURATION_HEADER, "experience");
     private static final Route BOOSTED_EXPERIENCE_CONFIGURATION_HEADER = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "boosted-experience");
-    private static final Route MODIFY_MOB_SPAWN_EXPERIENCE_CONFIGURATION_HEADER = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, ".modify-mob-spawn-experience");
     private static final Route SKILL_BOOKS_CONFIGURATION_HEADER = Route.addTo(CONFIGURATION_HEADER, "skill-books");
     private static final Route DISPLAY_CONFIGURATION_HEADER = Route.addTo(CONFIGURATION_HEADER, "display");
     private static final Route DISPLAY_EXPERIENCE_CONFIGURATION_HEADER = Route.addTo(DISPLAY_CONFIGURATION_HEADER, "exp-updates");
@@ -28,13 +27,13 @@ public class MainConfigFile extends ConfigFile {
     // General Configuration fields
     public static final Route DISABLED_WORLDS = Route.addTo(CONFIGURATION_HEADER, "disabled-worlds");
     public static final Route LANGUAGE_FILE = Route.addTo(CONFIGURATION_HEADER, "language-file");
-    public static final Route DISABLE_TIPS = Route.addTo(CONFIGURATION_HEADER, "disable-tips");
     public static final Route ENABLE_ABILITY_SPY = Route.addTo(ADMIN_CONFIGURATION_HEADER, "enable-ability-spy");
 
     // Save task fields
     public static final Route SAVE_TASK_FREQUENCY = Route.addTo(SAVE_TASK_HEADER, "frequency");
 
     //Experience fields
+    public static final Route MODIFY_MOB_SPAWN_EXPERIENCE_CONFIGURATION = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, ".modify-mob-spawn-experience");
     public static final Route MAX_DAMAGE_CAP_TO_AWARD_EXPERIENCE = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "max-damage-cap-to-award-exp");
     public static final Route EXPERIENCE_MULTIPLIER_LIMIT = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "exp-multiplier-limit");
     public static final Route SHIELD_BLOCKING_MODIFIER = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "shield-blocking-modifier");
@@ -42,9 +41,6 @@ public class MainConfigFile extends ConfigFile {
     public static final Route DISABLE_EXPERIENCE_FROM_ENDER_PEARLS = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "disable-experience-from-ender-pearls");
     public static final Route BOOSTED_EXPERIENCE_USAGE_RATE = Route.addTo(BOOSTED_EXPERIENCE_CONFIGURATION_HEADER, "usage-rate");
 
-    // Spawner fields
-    public static final Route MODIFY_MOB_SPAWN_EXPERIENCE_FROM_SPAWNER = Route.addTo(MODIFY_MOB_SPAWN_EXPERIENCE_CONFIGURATION_HEADER, "spawner");
-    public static final Route MODIFY_MOB_SPAWN_EXPERIENCE_FROM_SPAWN_EGG = Route.addTo(MODIFY_MOB_SPAWN_EXPERIENCE_CONFIGURATION_HEADER, "spawn-egg");
     public static final Route DISABLE_SKILL_BOOKS_IN_END = Route.addTo(SKILL_BOOKS_CONFIGURATION_HEADER, "disable-books-in-end");
     public static final Route EXPERIENCE_UPDATES_ENABLED = Route.addTo(DISPLAY_EXPERIENCE_CONFIGURATION_HEADER, "enabled");
     public static final Route EXPERIENCE_UPDATE_DISPLAY_TYPE = Route.addTo(DISPLAY_EXPERIENCE_CONFIGURATION_HEADER, "display-type");

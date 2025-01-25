@@ -9,12 +9,12 @@ configuration:
   # What worlds should McRPG be disabled in
   disabled-worlds:
     - 'test'
-  # This is how often the plugin saves player data (async) in minutes
-  save-interval: 1
+  # Configure the
+  save-task:
+    # This is how often the save task runs in seconds
+    frequency: 300
   # What language file you want to use. Do not include the .yml
   language-file: en
-  # If set to true, then players will not receive McRPG gameplay tips
-  disable-tips: false
   # Configure all admin features
   admin:
     # If enabled, admins with the permission node 'mcrpg.ability.spy' will be alerted when abilities are unlocked and upgraded
@@ -36,10 +36,14 @@ configuration:
       usage-rate: '((gained_exp)*2.25)'
     # Modify the exp worth of mobs from spawners and eggs
     modify-mob-spawn-experience:
-      # The multiplier to apply whenever a mob from spawners gives experience
-      spawner: 0.5
-      # The multiplier to apply whenever a mob from spawn eggs gives experience
-      spawn-eggs: 0.5
+      # The following format is SpawnReason: Modifier
+      # The spawn reason can be selected from any in the following list
+      # https://jd.papermc.io/paper/1.21.4/org/bukkit/event/entity/CreatureSpawnEvent.SpawnReason.html
+      # The modifier is how much experience gained should be multiplied by for that spawn reason.
+      # Please note the above link may be for an older version of Minecraft than the one you are using,
+      # make sure the version represents the version you are trying to use.
+      SPAWNER: 0.5
+      SPAWNER_EGG: 05
     # If when players redeem levels, should this reset the amount of exp needed to level up.
     # Ex) Player has gained 5,000 experience in Swords and uses a redeemable level. If this is enabled,
     # then the experience gained will be reset to 0 whenever the level is added. Otherwise, the 5,000 is kept.
