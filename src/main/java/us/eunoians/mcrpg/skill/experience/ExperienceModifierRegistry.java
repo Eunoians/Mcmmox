@@ -24,13 +24,20 @@ public final class ExperienceModifierRegistry {
     }
 
     /**
+     * Registers the provided {@link ExperienceModifier} to be used.
      *
-     * @param experienceModifier
+     * @param experienceModifier The {@link ExperienceModifier} to register.
      */
     public void registerModifier(@NotNull ExperienceModifier experienceModifier) {
         experienceModifiers.add(experienceModifier);
     }
 
+    /**
+     * Calculates the modifier that should be applied to experience gained from the provided {@link SkillExperienceContext}.
+     *
+     * @param skillExperienceContext The {@link SkillExperienceContext} to calculate a modifier for.
+     * @return The modifier that should be applied to gained experience.
+     */
     public double calculateModifierForContext(@NotNull SkillExperienceContext<? extends Event> skillExperienceContext) {
         return experienceModifiers.stream()
                 .filter(experienceModifier -> experienceModifier.canProcessContext(skillExperienceContext))
