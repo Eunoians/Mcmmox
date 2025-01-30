@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * The base class for any skills
  */
-public abstract class Skill implements McRPGContent {
+public abstract class  Skill implements McRPGContent {
 
     private final Map<Class<? extends Event>, List<EventLevelableComponentAttribute>> levelingAttributes;
 

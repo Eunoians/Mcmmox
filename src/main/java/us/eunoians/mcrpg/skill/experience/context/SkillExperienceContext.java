@@ -26,7 +26,7 @@ public abstract class SkillExperienceContext<T extends Event> {
     public SkillExperienceContext(@NotNull SkillHolder skillHolder, @NotNull Skill skill, int baseExperience, @NotNull T event) {
         this.skillHolder = skillHolder;
         this.skill = skill;
-        this.baseExperience = baseExperience;
+        this.baseExperience = Math.max(0, baseExperience);
         this.event = event;
     }
 
@@ -60,6 +60,11 @@ public abstract class SkillExperienceContext<T extends Event> {
         return skill;
     }
 
+    /**
+     * Gets the base amount of experience that is being given in this context.
+     *
+     * @return The base amount of experience that is being given in this context.
+     */
     public final int getBaseExperience() {
         return baseExperience;
     }
