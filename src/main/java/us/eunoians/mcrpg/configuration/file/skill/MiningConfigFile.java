@@ -56,6 +56,7 @@ public class MiningConfigFile extends AbilityConfigFile {
     public static final Route ORE_SCANNER_AMOUNT_OF_TIERS = Route.addTo(ORE_SCANNER_HEADER, "amount-of-tiers");
     public static final Route ORE_SCANNER_CONFIGURATION_HEADER = Route.addTo(ORE_SCANNER_HEADER, "tier-configuration");
 
+    @NotNull
     @Override
     public UpdaterSettings getUpdaterSettings() {
         return UpdaterSettings.builder().setVersioning(new BasicVersioning("config-version")).addIgnoredRoutes(getIgnoredRoutes()).build();

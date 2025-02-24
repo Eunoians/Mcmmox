@@ -46,6 +46,7 @@ public class WoodcuttingConfigFile extends AbilityConfigFile {
     public static final Route NYMPHS_VITALITY_VALID_BIOMES = Route.addTo(NYMPHS_VITALITY_HEADER, "valid-biomes");
     public static final Route NYMPHS_VITALITY_CONFIGURATION_HEADER = Route.addTo(NYMPHS_VITALITY_HEADER, "tier-configuration");
 
+    @NotNull
     @Override
     public UpdaterSettings getUpdaterSettings() {
         return UpdaterSettings.builder().setVersioning(new BasicVersioning("config-version")).addIgnoredRoutes(getIgnoredRoutes()).build();

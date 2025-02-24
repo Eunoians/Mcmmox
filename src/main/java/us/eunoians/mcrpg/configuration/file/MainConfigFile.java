@@ -17,7 +17,6 @@ public class MainConfigFile extends ConfigFile {
     private static final Route DISPLAY_EXPERIENCE_CONFIGURATION_HEADER = Route.addTo(DISPLAY_CONFIGURATION_HEADER, "exp-updates");
     private static final Route GAMEPLAY_CONFIGURATION_HEADER = Route.addTo(CONFIGURATION_HEADER, "gameplay");
     private static final Route LOADOUT_CONFIGURATION_HEADER = Route.addTo(GAMEPLAY_CONFIGURATION_HEADER, "loadout");
-    private static final Route MOB_HEALTH_BAR_CONFIGURATION_HEADER = Route.addTo(GAMEPLAY_CONFIGURATION_HEADER, "mob-health-bar");
     private static final Route MCMMO_CONFIGURATION_HEADER = Route.addTo(CONFIGURATION_HEADER, "mcmmo");
     private static final Route DATABASE_HEADER = Route.addTo(CONFIGURATION_HEADER, "database");
 

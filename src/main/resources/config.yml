@@ -73,13 +73,6 @@ configuration:
     # An example is if we set a player to have the permission 'mcrpg.swords.500'. This player would gain no exp past level 500 in swords
     # Use mcrpg.%skill%.%level% as the perm
     enable-level-up-permissions: false
-    # Configure the health bars that appear above mobs when they are attacked
-    mob-health-bar:
-      # If set to true, mobs will have a healthbar displaying their current health over their heads
-      # The type of display is configured per player in their player settings
-      enabled: true
-      # How long should the health bars be displayed for in seconds
-      health-bar-display-duration: 5
 
 # Configure McMMO integration
 mcmmo:

@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * The expansion for McRPG placeholder support for use with PAPI.
+ */
 public class McRPGPapiExpansion extends PlaceholderExpansion {
 
     private final Map<String, McRPGPlaceholder> placeholders = new HashMap<>();

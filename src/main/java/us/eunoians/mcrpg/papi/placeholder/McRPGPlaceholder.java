@@ -4,6 +4,9 @@ import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * An abstraction for a {@link }
+ */
 public abstract class McRPGPlaceholder {
 
     private final String identifier;

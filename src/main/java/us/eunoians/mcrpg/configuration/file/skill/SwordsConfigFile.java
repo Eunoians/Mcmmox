@@ -64,6 +64,7 @@ public class SwordsConfigFile extends AbilityConfigFile {
     public static final Route RAGE_SPIKE_CONFIGURATION_HEADER = Route.addTo(RAGE_SPIKE_HEADER, "tier-configuration");
 
 
+    @NotNull
     @Override
     public UpdaterSettings getUpdaterSettings() {
         return UpdaterSettings.builder().setVersioning(new BasicVersioning("config-version")).addIgnoredRoutes(getIgnoredRoutes()).build();

@@ -1,6 +1,5 @@
 package us.eunoians.mcrpg.entity.player;
 
-import com.diamonddagger590.mccore.database.table.impl.MutexDAO;
 import com.diamonddagger590.mccore.database.transaction.BatchTransaction;
 import com.diamonddagger590.mccore.database.transaction.FailSafeTransaction;
 import com.diamonddagger590.mccore.player.CorePlayer;
@@ -17,6 +16,7 @@ import us.eunoians.mcrpg.ability.impl.TierableAbility;
 import us.eunoians.mcrpg.database.table.LoadoutAbilityDAO;
 import us.eunoians.mcrpg.database.table.LoadoutDisplayDAO;
 import us.eunoians.mcrpg.database.table.LoadoutInfoDAO;
+import us.eunoians.mcrpg.database.table.PlayerExperienceExtrasDAO;
 import us.eunoians.mcrpg.database.table.PlayerSettingDAO;
 import us.eunoians.mcrpg.database.table.SkillDAO;
 import us.eunoians.mcrpg.entity.holder.QuestHolder;
@@ -45,6 +45,7 @@ public class McRPGPlayer extends CorePlayer {
     private final SkillHolder skillHolder;
     private final QuestHolder questHolder;
     private final Map<NamespacedKey, PlayerSetting> playerSettings;
+    private final PlayerExperienceExtras playerExperienceExtras;
 
     public McRPGPlayer(@NotNull Player player, @NotNull McRPG mcRPG) {
         super(player.getUniqueId());
@@ -52,6 +53,7 @@ public class McRPGPlayer extends CorePlayer {
         skillHolder = new SkillHolder(mcRPG, getUUID());
         questHolder = new QuestHolder(getUUID());
         playerSettings = new HashMap<>();
+        playerExperienceExtras = new PlayerExperienceExtras();
     }
 
     public McRPGPlayer(@NotNull UUID uuid, @NotNull McRPG mcRPG) {
@@ -60,6 +62,7 @@ public class McRPGPlayer extends CorePlayer {
         skillHolder = new SkillHolder(mcRPG, getUUID());
         questHolder = new QuestHolder(getUUID());
         playerSettings = new HashMap<>();
+        playerExperienceExtras = new PlayerExperienceExtras();
     }
 
     @Override
@@ -192,6 +195,22 @@ public class McRPGPlayer extends CorePlayer {
         quest.startQuest();
     }
 
+
+    /**
+     * Gets the {@link PlayerExperienceExtras} for this player.
+     *
+     * @return The {@link PlayerExperienceExtras} for this player.
+     */
+    @NotNull
+    public PlayerExperienceExtras getExperienceExtras() {
+        return playerExperienceExtras;
+    }
+
+    /**
+     * Saves all player data using the provided {@link Connection}.
+     *
+     * @param connection The {@link Connection} to use to save data to.
+     */
     public void savePlayer(@NotNull Connection connection) {
         BatchTransaction batchTransaction = new BatchTransaction(connection);
         FailSafeTransaction failsafeTransaction = new FailSafeTransaction(connection);
@@ -199,12 +218,9 @@ public class McRPGPlayer extends CorePlayer {
         failsafeTransaction.addAll(LoadoutInfoDAO.saveAllLoadoutInfo(connection, skillHolder));
         failsafeTransaction.addAll(LoadoutAbilityDAO.saveAllLoadouts(connection, skillHolder));
         failsafeTransaction.addAll(LoadoutDisplayDAO.saveAllLoadoutDisplays(connection, skillHolder));
+        failsafeTransaction.addAll(PlayerExperienceExtrasDAO.savePlayerExperienceExtras(connection, getUUID(), playerExperienceExtras));
         batchTransaction.addAll(PlayerSettingDAO.savePlayerSettings(connection, getUUID(), getPlayerSettings()));
         failsafeTransaction.executeTransaction();
         batchTransaction.executeTransaction();
-
-        if (useMutex()) {
-            MutexDAO.updateUserMutex(connection, getUUID(), false);
-        }
     }
 }

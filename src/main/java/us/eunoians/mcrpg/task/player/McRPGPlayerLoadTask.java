@@ -1,5 +1,6 @@
 package us.eunoians.mcrpg.task.player;
 
+import com.diamonddagger590.mccore.database.transaction.BatchTransaction;
 import com.diamonddagger590.mccore.task.player.PlayerLoadTask;
 import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
@@ -15,6 +16,8 @@ import us.eunoians.mcrpg.configuration.FileType;
 import us.eunoians.mcrpg.configuration.file.MainConfigFile;
 import us.eunoians.mcrpg.database.table.LoadoutAbilityDAO;
 import us.eunoians.mcrpg.database.table.LoadoutDisplayDAO;
+import us.eunoians.mcrpg.database.table.PlayerExperienceExtrasDAO;
+import us.eunoians.mcrpg.database.table.PlayerLoginTimeDAO;
 import us.eunoians.mcrpg.database.table.PlayerSettingDAO;
 import us.eunoians.mcrpg.database.table.SkillDAO;
 import us.eunoians.mcrpg.database.table.SkillDataSnapshot;
@@ -26,6 +29,7 @@ import us.eunoians.mcrpg.skill.SkillRegistry;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -60,7 +64,19 @@ public class McRPGPlayerLoadTask extends PlayerLoadTask {
         SkillHolder skillHolder = getCorePlayer().asSkillHolder();
         UUID uuid = getCorePlayer().getUUID();
 
+        // TODO move this into the skill holder
         try (Connection connection = getPlugin().getDatabase().getConnection()) {
+            // Check if the player has logged in before
+            boolean hasPlayerLoggedInBefore = PlayerLoginTimeDAO.hasPlayerLoggedInBefore(connection, uuid);
+            Instant loginTime = Instant.now();
+            BatchTransaction loginInfoTransaction = new BatchTransaction(connection);
+            if (!hasPlayerLoggedInBefore) {
+                loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveFirstLoginTime(connection, uuid, loginTime));
+            }
+            loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveLastLoginTime(connection, uuid, loginTime));
+            loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveLastSeenTime(connection, uuid, loginTime));
+            loginInfoTransaction.executeTransaction();
+
             for (NamespacedKey skillKey : skillRegistry.getRegisteredSkillKeys()) {
                 Skill skill = skillRegistry.getRegisteredSkill(skillKey);
                 getPlugin().getLogger().log(Level.INFO, "Loading data for skill: " + skillKey.getKey());
@@ -99,6 +115,8 @@ public class McRPGPlayerLoadTask extends PlayerLoadTask {
 
             // Player settings
             PlayerSettingDAO.getPlayerSettings(connection, uuid).forEach(playerSetting -> getCorePlayer().setPlayerSetting(playerSetting));
+            // Experience extras
+            getCorePlayer().getExperienceExtras().copyExtras(PlayerExperienceExtrasDAO.getPlayerExperienceExtras(connection, uuid));
             return true;
         }
         catch (SQLException e) {
