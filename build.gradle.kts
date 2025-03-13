@@ -87,6 +87,9 @@ dependencies {
     val apolloVersion = "1.1.5"
     compileOnly("com.lunarclient:apollo-api:$apolloVersion")
 
+    val landsVersion = "7.10.13"
+    compileOnly("com.github.angeschossen:LandsAPI:$landsVersion")
+
     // Test deps
     val mockBukkitVersion = "3.80.0"
     testImplementation("com.github.seeseemelk:MockBukkit-v1.20:$mockBukkitVersion")

@@ -2,7 +2,7 @@ package us.eunoians.mcrpg.configuration.file;
 
 import dev.dejvokep.boostedyaml.route.Route;
 
-public class MainConfigFile extends ConfigFile {
+public final class MainConfigFile extends ConfigFile {
 
     private static final int CURRENT_VERSION = 1;
 
@@ -31,7 +31,7 @@ public class MainConfigFile extends ConfigFile {
     // Save task fields
     public static final Route SAVE_TASK_FREQUENCY = Route.addTo(SAVE_TASK_HEADER, "frequency");
 
-    //Experience fields
+    // Experience fields
     public static final Route MODIFY_MOB_SPAWN_EXPERIENCE_CONFIGURATION = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, ".modify-mob-spawn-experience");
     public static final Route MAX_DAMAGE_CAP_TO_AWARD_EXPERIENCE = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "max-damage-cap-to-award-exp");
     public static final Route EXPERIENCE_MULTIPLIER_LIMIT = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "exp-multiplier-limit");
@@ -39,6 +39,25 @@ public class MainConfigFile extends ConfigFile {
     public static final Route RESET_EXPERIENCE_UPON_REDEEM_LEVELS = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "reset-exp-upon-redeemed-levels");
     public static final Route DISABLE_EXPERIENCE_FROM_ENDER_PEARLS = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "disable-experience-from-ender-pearls");
     public static final Route BOOSTED_EXPERIENCE_USAGE_RATE = Route.addTo(BOOSTED_EXPERIENCE_CONFIGURATION_HEADER, "usage-rate");
+
+    // Rested Experience
+    private static final Route RESTED_EXPERIENCE_HEADER = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "rested-experience");
+    private static final Route SAFE_ZONE_HEADER = Route.addTo(RESTED_EXPERIENCE_HEADER, "safe-zone");
+    private static final Route SAFE_ZONE_HOOKS_HEADER = Route.addTo(SAFE_ZONE_HEADER, "safe-zone-hooks");
+    private static final Route SAFE_ZONE_HOOKS_WORLD_GUARD_HEADER = Route.addTo(SAFE_ZONE_HOOKS_HEADER, "world-guard");
+    private static final Route SAFE_ZONE_HOOKS_LANDS_HEADER = Route.addTo(SAFE_ZONE_HOOKS_HEADER, "lands");
+    public static final Route RESTED_EXPERIENCE_ACCUMULATION_RATE = Route.addTo(RESTED_EXPERIENCE_HEADER, "accumulation-rate");
+    public static final Route RESTED_EXPERIENCE_USAGE_RATE = Route.addTo(RESTED_EXPERIENCE_HEADER, "usage-rate");
+    public static final Route RESTED_EXPERIENCE_MAXIMUM_ACCUMULATION = Route.addTo(RESTED_EXPERIENCE_HEADER, "maximum-accumulation");
+    public static final Route RESTED_EXPERIENCE_ALLOW_ONLINE_ACCUMULATION = Route.addTo(RESTED_EXPERIENCE_HEADER, "allow-online-accumulation");
+    public static final Route SAFE_ZONE_ALLOW_ACCUMULATION = Route.addTo(SAFE_ZONE_HEADER, "allow-safe-zone-accumulation");
+    public static final Route SAFE_ZONE_ACCUMULATION_RATE = Route.addTo(SAFE_ZONE_HEADER, "safe-zone-accumulation-rate");
+    public static final Route SAFE_ZONE_HOOKS_WORLD_GUARD_ENABLED = Route.addTo(SAFE_ZONE_HOOKS_WORLD_GUARD_HEADER, "enabled");
+    public static final Route SAFE_ZONE_HOOKS_LANDS_OWNED_LANDS = Route.addTo(SAFE_ZONE_HOOKS_LANDS_HEADER, "owned-lands");
+    public static final Route SAFE_ZONE_HOOKS_LANDS_TRUSTED_LANDS = Route.addTo(SAFE_ZONE_HOOKS_LANDS_HEADER, "trusted_lands");
+    public static final Route SAFE_ZONE_HOOKS_LANDS_TENANT_LANDS = Route.addTo(SAFE_ZONE_HOOKS_LANDS_HEADER, "tenant-lands");
+    public static final Route SAFE_ZONE_HOOKS_LANDS_ANY_LANDS = Route.addTo(SAFE_ZONE_HOOKS_LANDS_HEADER, "any-lands");
+    public static final Route SAFE_ZONE_HOOKS_LANDS_WILD_ZONE = Route.addTo(SAFE_ZONE_HOOKS_LANDS_HEADER, "wild-zone");
 
     public static final Route DISABLE_SKILL_BOOKS_IN_END = Route.addTo(SKILL_BOOKS_CONFIGURATION_HEADER, "disable-books-in-end");
     public static final Route EXPERIENCE_UPDATES_ENABLED = Route.addTo(DISPLAY_EXPERIENCE_CONFIGURATION_HEADER, "enabled");

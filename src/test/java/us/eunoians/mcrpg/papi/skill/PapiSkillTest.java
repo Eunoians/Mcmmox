@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.mock.player.MockMcRPGPlayer;
 import us.eunoians.mcrpg.mock.skill.MockSkill;
-import us.eunoians.mcrpg.papi.McRPGPapiExpansion;
+import us.eunoians.mcrpg.external.papi.McRPGPapiExpansion;
 import us.eunoians.mcrpg.skill.SkillRegistry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

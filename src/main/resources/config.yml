@@ -24,7 +24,7 @@ configuration:
     # The maximum amount of damage allowed for giving experience. Any damage above this threshold will be ignored when calculating exp to award.
     max-damage-cap-to-award-exp: 1000000
     # The maximum amount of exp multiplier that a player should be able to get from various exp modifiers when combined.
-    exp-multiplier-limit: 3.0
+    exp-multiplier-limit: 5.0
     # How much the experience gain should be modified if the target is blocking with a shield.
     shield-blocking-modifier: 0.5
     # Allows disabling of experience gain when taking damage from ender pearls.
@@ -34,6 +34,50 @@ configuration:
       # When a player gains exp, this equation is factored in and if there is remaining boosted exp,
       # then it will add this equation value to the gained amount
       usage-rate: '((gained_exp)*2.25)'
+    # Rested Experience allows players to passively gain an experience boost.
+    # This experience boost is measured in Levels. So as an example, a player might have 1.2 Levels worth of Rested Experience.
+    # Rested Experience is relative in terms of how much experience it multiplies as a result.
+    # If a player needs 1000 experience to level up, then doubling an experience gain of 100 will consume 0.1 L=levels of Rested Experience.
+    # If a player needs 10000 experience to level up, then doubling an experience gain of 100 will consume 0.01 levels of Rested Experience.
+    rested-experience:
+      # How fast can a player accumulate rested experience. Time is measured in seconds
+      accumulation-rate: '0.00027*time'
+      # What should the multiplier be when using rested experience?
+      usage-rate: '((gained_exp)*3.0)'
+      # How many levels worth of rested experience can a player have at once
+      maximum-accumulation: 1.5
+      # This can be ENABLED, SAFE_ZONE, or DISABLED
+      # ENABLED: Allows accumulation of rested experience while online
+      # SAFE_ZONE: Only allow rested experience accumulation while online in a safe zone
+      # DISABLED: Don't allow accumulation of rested experience while online
+      allow-online-accumulation: SAFE_ZONE
+      # Allow for faster accumulation to occur if a player is in a "safe zone"
+      safe-zone:
+        # Enables safe zone rested experience accumulation
+        allow-safe-zone-accumulation: true
+        # How fast can a player accumulate rested experience if they are in a safe zone? Time is measured in seconds
+        safe-zone-accumulation-rate: '0.00056*time'
+        # 3rd party plugin support for defining a safe zone.
+        # If a player is standing in a location such that multiple plugins can provide a definition for a "safe zone",
+        # then the final result will be the OR of all the valid plugins.
+        safe-zone-hooks:
+          # A WorldGuard region with the flag 'mcrpg-safe-zone' will be treated as a safe zone
+          # To set this flag, use the command '/rf flag'
+          world-guard:
+            # If WorldGuard support should be enabled
+            enabled: true
+          # Allows configuring the definition of a safe zone based on different land types.
+          lands:
+            # If a player owns the land they are standing in, will it count as a safe zone?
+            owned-lands: true
+            # If a player is trusted in the land they are standing in, will it count as a safe zone?
+            trusted-lands: true
+            # If a player is a tenant of the land they are standing in, will it count as a safe zone?
+            tenant-lands: true
+            # If a player is standing in any land, will it count as a safe zone?
+            any-lands: false
+            # If a player is not standing in any land, will it be counted as a safe zone?
+            wild-zone: false
     # Modify the exp worth of mobs from spawners and eggs
     modify-mob-spawn-experience:
       # The following format is SpawnReason: Modifier

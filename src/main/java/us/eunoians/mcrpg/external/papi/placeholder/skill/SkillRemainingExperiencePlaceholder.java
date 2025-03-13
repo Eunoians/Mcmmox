@@ -1,4 +1,4 @@
-package us.eunoians.mcrpg.papi.placeholder.skill;
+package us.eunoians.mcrpg.external.papi.placeholder.skill;
 
 import com.diamonddagger590.mccore.player.PlayerManager;
 import org.bukkit.NamespacedKey;
@@ -8,14 +8,14 @@ import org.jetbrains.annotations.Nullable;
 import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.entity.holder.SkillHolder;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
-import us.eunoians.mcrpg.papi.placeholder.McRPGPlaceholder;
+import us.eunoians.mcrpg.external.papi.placeholder.McRPGPlaceholder;
 
-public class SkillCurrentLevelPlaceholder extends McRPGPlaceholder {
+public class SkillRemainingExperiencePlaceholder extends McRPGPlaceholder {
 
-    private static final String PLACEHOLDER = "%s_current_level";
+    private static final String PLACEHOLDER = "%s_remaining_experience_needed";
     private final NamespacedKey skillKey;
 
-    public SkillCurrentLevelPlaceholder(@NotNull NamespacedKey skillKey) {
+    public SkillRemainingExperiencePlaceholder(@NotNull NamespacedKey skillKey) {
         super(String.format(PLACEHOLDER, skillKey.getKey()));
         this.skillKey = skillKey;
     }
@@ -31,7 +31,7 @@ public class SkillCurrentLevelPlaceholder extends McRPGPlaceholder {
             var skillDataOptional = skillHolder.getSkillHolderData(skillKey);
             if (skillDataOptional.isPresent()) {
                 var skillData = skillDataOptional.get();
-                return Integer.toString(skillData.getCurrentLevel());
+                return Integer.toString(skillData.getExperienceForNextLevel());
             }
         }
         return null;

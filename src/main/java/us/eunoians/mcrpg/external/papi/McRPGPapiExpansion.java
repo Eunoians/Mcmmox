@@ -1,4 +1,4 @@
-package us.eunoians.mcrpg.papi;
+package us.eunoians.mcrpg.external.papi;
 
 import com.google.common.collect.ImmutableList;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -6,8 +6,8 @@ import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import us.eunoians.mcrpg.McRPG;
-import us.eunoians.mcrpg.papi.placeholder.McRPGPlaceHolderType;
-import us.eunoians.mcrpg.papi.placeholder.McRPGPlaceholder;
+import us.eunoians.mcrpg.external.papi.placeholder.McRPGPlaceHolderType;
+import us.eunoians.mcrpg.external.papi.placeholder.McRPGPlaceholder;
 
 import java.util.Arrays;
 import java.util.HashMap;

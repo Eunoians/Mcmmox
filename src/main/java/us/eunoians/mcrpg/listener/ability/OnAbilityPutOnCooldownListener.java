@@ -7,7 +7,7 @@ import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.ability.impl.CooldownableAbility;
 import us.eunoians.mcrpg.entity.holder.AbilityHolder;
 import us.eunoians.mcrpg.event.ability.AbilityPutOnCooldownEvent;
-import us.eunoians.mcrpg.util.LunarUtils;
+import us.eunoians.mcrpg.external.lunar.LunarUtils;
 
 /**
  * This listener automatically starts the cooldown expire timer whenever

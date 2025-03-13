@@ -13,6 +13,7 @@ import fr.skytasul.glowingentities.GlowingEntities;
 import org.bukkit.Bukkit;
 import org.geysermc.api.Geyser;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import us.eunoians.mcrpg.ability.AbilityRegistry;
 import us.eunoians.mcrpg.ability.attribute.AbilityAttributeManager;
 import us.eunoians.mcrpg.ability.impl.swords.bleed.BleedManager;
@@ -40,6 +41,10 @@ import us.eunoians.mcrpg.entity.player.McRPGPlayer;
 import us.eunoians.mcrpg.expansion.ContentExpansionManager;
 import us.eunoians.mcrpg.expansion.McRPGExpansion;
 import us.eunoians.mcrpg.expansion.handler.ContentHandlerType;
+import us.eunoians.mcrpg.external.lands.LandsHook;
+import us.eunoians.mcrpg.external.lunar.LunarUtils;
+import us.eunoians.mcrpg.external.papi.McRPGPapiExpansion;
+import us.eunoians.mcrpg.external.worldguard.WorldGuardHook;
 import us.eunoians.mcrpg.listener.ability.OnAbilityActivateListener;
 import us.eunoians.mcrpg.listener.ability.OnAbilityCooldownExpireListener;
 import us.eunoians.mcrpg.listener.ability.OnAbilityPutOnCooldownListener;
@@ -68,7 +73,6 @@ import us.eunoians.mcrpg.listener.skill.OnAttackLevelListener;
 import us.eunoians.mcrpg.listener.skill.OnBlockBreakLevelListener;
 import us.eunoians.mcrpg.listener.skill.OnSkillLevelUpListener;
 import us.eunoians.mcrpg.listener.world.FakeBlockBreakListener;
-import us.eunoians.mcrpg.papi.McRPGPapiExpansion;
 import us.eunoians.mcrpg.quest.QuestManager;
 import us.eunoians.mcrpg.setting.PlayerSettingRegistry;
 import us.eunoians.mcrpg.skill.SkillRegistry;
@@ -76,12 +80,13 @@ import us.eunoians.mcrpg.skill.experience.ExperienceModifierRegistry;
 import us.eunoians.mcrpg.skill.experience.modifier.HeldItemBonusModifier;
 import us.eunoians.mcrpg.skill.experience.modifier.SpawnReasonModifier;
 import us.eunoians.mcrpg.task.player.McRPGPlayerSaveTask;
-import us.eunoians.mcrpg.util.LunarUtils;
 import us.eunoians.mcrpg.world.WorldManager;
+import us.eunoians.mcrpg.world.safezone.SafeZoneManager;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * The main class for McRPG where developers should be able to access various components of the API's provided by McRPG
@@ -107,6 +112,7 @@ public class McRPG extends CorePlugin {
     private PlayerSettingRegistry playerSettingRegistry;
     private ContentExpansionManager contentExpansionManager;
     private WorldManager worldManager;
+    private SafeZoneManager safeZoneManager;
     private ExperienceModifierRegistry experienceModifierRegistry;
 
     private GlowingBlocks glowingBlocks;
@@ -117,10 +123,13 @@ public class McRPG extends CorePlugin {
     private boolean papiEnabled = false;
     private boolean ncpEnabled = false;
     private boolean sickleEnabled = false;
-    private boolean worldGuardEnabled = false;
     private boolean mcmmoEnabled = false;
     private boolean geyserEnabled = false;
     private boolean lunarEnabled = false;
+    @Nullable
+    private LandsHook landsHook;
+    @Nullable
+    private WorldGuardHook worldGuardHook;
 
     @Override
     public void onEnable() {
@@ -143,6 +152,7 @@ public class McRPG extends CorePlugin {
         playerSettingRegistry = new PlayerSettingRegistry();
         contentExpansionManager = new ContentExpansionManager(this);
         worldManager = new WorldManager(this);
+        safeZoneManager = new SafeZoneManager(this);
         experienceModifierRegistry = new ExperienceModifierRegistry(this);
 
         if (!isUnitTest()) {
@@ -315,7 +325,7 @@ public class McRPG extends CorePlugin {
         }
 
         if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
-            worldGuardEnabled = true;
+            worldGuardHook = new WorldGuardHook(this);
         }
 
         if (Bukkit.getPluginManager().isPluginEnabled("Geyser")) {
@@ -326,6 +336,10 @@ public class McRPG extends CorePlugin {
         if (Bukkit.getPluginManager().isPluginEnabled("Apollo-Bukkit")) {
             lunarEnabled = true;
             getLogger().info("Apollo found... enabling Lunar Client support.");
+        }
+
+        if (Bukkit.getPluginManager().isPluginEnabled("Lands")) {
+            landsHook = new LandsHook(this);
         }
     }
 
@@ -488,6 +502,16 @@ public class McRPG extends CorePlugin {
     }
 
     /**
+     * Gets the {@link SafeZoneManager} used by McRPG.
+     *
+     * @return The {@link SafeZoneManager} used by McRPG.
+     */
+    @NotNull
+    public SafeZoneManager getSafeZoneManager() {
+        return safeZoneManager;
+    }
+
+    /**
      * Gets the {@link ExperienceModifierRegistry} used by McRPG.
      *
      * @return The {@link ExperienceModifierRegistry} used by McRPG.
@@ -524,6 +548,34 @@ public class McRPG extends CorePlugin {
         return papiEnabled;
     }
 
+    /**
+     * Gets the {@link LandsHook} McRPG uses to support Lands.
+     *
+     * @return An {@link Optional} containing the {@link LandsHook} McRPG uses to support
+     * <a href="https://www.spigotmc.org/resources/lands-%E2%AD%95-land-claim-plugin-%E2%9C%85-grief-prevention-protection-gui-management-nations-wars-1-21-support.53313/">Lands</a>
+     * if Lands is running.
+     */
+    @NotNull
+    public Optional<LandsHook> getLandsHook() {
+        return Optional.ofNullable(landsHook);
+    }
+
+    /**
+     * Gets the {@link WorldGuardHook} McRPG uses to support WorldGuard.
+     *
+     * @return An {@link Optional} containing the {@link WorldGuardHook} McRPG uses to support
+     * <a href="https://modrinth.com/plugin/worldguard/versions">WorldGuard</a> if the plugin is running.
+     */
+    @NotNull
+    public Optional<WorldGuardHook> getWorldGuardHook() {
+        return Optional.ofNullable(worldGuardHook);
+    }
+
+    /**
+     * Gets the running instance of {@link McRPG}.
+     *
+     * @return The running instance of {@link McRPG}.
+     */
     @NotNull
     public static McRPG getInstance() {
         return (McRPG) CorePlugin.getInstance();

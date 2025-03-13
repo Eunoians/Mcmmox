@@ -1,4 +1,4 @@
-package us.eunoians.mcrpg.papi.placeholder.ability;
+package us.eunoians.mcrpg.external.papi.placeholder.ability;
 
 import com.diamonddagger590.mccore.player.PlayerManager;
 import org.bukkit.NamespacedKey;
@@ -10,7 +10,7 @@ import us.eunoians.mcrpg.ability.attribute.AbilityAttributeManager;
 import us.eunoians.mcrpg.ability.attribute.AbilityTierAttribute;
 import us.eunoians.mcrpg.entity.holder.SkillHolder;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
-import us.eunoians.mcrpg.papi.placeholder.McRPGPlaceholder;
+import us.eunoians.mcrpg.external.papi.placeholder.McRPGPlaceholder;
 
 public class AbilityTierPlaceholder extends McRPGPlaceholder {
 
