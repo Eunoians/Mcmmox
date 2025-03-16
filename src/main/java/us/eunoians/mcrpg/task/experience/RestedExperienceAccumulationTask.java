@@ -69,18 +69,17 @@ public final class RestedExperienceAccumulationTask extends CancellableCoreTask 
                     var playerOptional = mcRPGPlayer.getAsBukkitPlayer();
                     if (playerOptional.isPresent()) {
                         Player player = playerOptional.get();
-                        boolean inSafeZone = getPlugin().getSafeZoneManager().isPlayerInSafeZone(player);
-                        double accumulatedRestedExperience = 0;
+                        boolean inSafeZone = false;
                         // ENABLED and SAFE_ZONE_ONLY support safe zones so we can first check for
-                        // safe zone accumulation, and then default to normal
-                        if (mcRPGPlayer.isStandingInSafeZone() && inSafeZone && getPlugin().getFileManager().getFile(FileType.MAIN_CONFIG).getBoolean(MainConfigFile.SAFE_ZONE_ALLOW_ACCUMULATION)) {
-                            accumulatedRestedExperience = restedExperienceManager.getRestedExperience((int) duration, true);
+                        // safe zone accumulation
+                        if (mcRPGPlayer.isStandingInSafeZone() && getPlugin().getSafeZoneManager().isPlayerInSafeZone(player) && getPlugin().getFileManager().getFile(FileType.MAIN_CONFIG).getBoolean(MainConfigFile.SAFE_ZONE_ALLOW_ACCUMULATION)) {
+                            inSafeZone = true;
                         }
-                        // Check to see if we support accumulation not in safe zones while players are online
-                        else if (onlineAccumulationType.getContent() == OnlineAccumulationType.ENABLED) {
-                            accumulatedRestedExperience = restedExperienceManager.getRestedExperience((int) duration, false);
+                        // If normal online accumulation isn't enabled and we aren't in a safe zone, then we aren't going to award anything.
+                        else if (onlineAccumulationType.getContent() != OnlineAccumulationType.ENABLED) {
+                            continue;
                         }
-                        restedExperienceManager.awardRestedExperience(mcRPGPlayer, accumulatedRestedExperience);
+                        restedExperienceManager.awardRestedExperience(mcRPGPlayer, (int) taskDelay, inSafeZone);
                         mcRPGPlayer.setStandingInSafeZone(inSafeZone);
                     }
                 }

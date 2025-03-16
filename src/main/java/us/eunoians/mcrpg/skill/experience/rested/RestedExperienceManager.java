@@ -42,9 +42,25 @@ public class RestedExperienceManager {
     }
 
     /**
+     * Calculates and awards rested experience to the provided {@link McRPGPlayer}. If the player currently has more rested experience than
+     * the current limit, then this method turns into a no-op.
+     * <p>
+     * This method also will override the safe zone boolean if safe zone accumulation is disabled in the config.
+     *
+     * @param mcRPGPlayer   The {@link McRPGPlayer} to award experience to.
+     * @param timeInSeconds The amount of time in seconds to give rested experience for.
+     * @param safeZone      If the safe zone equation should be used or not.
+     */
+    public void awardRestedExperience(@NotNull McRPGPlayer mcRPGPlayer, int timeInSeconds, boolean safeZone) {
+        boolean useSafeZone = safeZone && mcRPG.getFileManager().getFile(FileType.MAIN_CONFIG).getBoolean(MainConfigFile.SAFE_ZONE_ALLOW_ACCUMULATION);
+        awardRestedExperience(mcRPGPlayer, getRestedExperience(timeInSeconds, useSafeZone));
+    }
+
+    /**
      * Awards rested experience to the provided {@link McRPGPlayer}. If the player currently has more rested experience than
      * the current limit, then this method turns into a no-op.
-     * @param mcRPGPlayer The {@link McRPGPlayer} to award experience to.
+     *
+     * @param mcRPGPlayer      The {@link McRPGPlayer} to award experience to.
      * @param restedExperience The amount of rested experience to give.
      */
     public void awardRestedExperience(@NotNull McRPGPlayer mcRPGPlayer, double restedExperience) {

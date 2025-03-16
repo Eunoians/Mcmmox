@@ -26,9 +26,11 @@ import us.eunoians.mcrpg.entity.player.McRPGPlayer;
 import us.eunoians.mcrpg.loadout.Loadout;
 import us.eunoians.mcrpg.skill.Skill;
 import us.eunoians.mcrpg.skill.SkillRegistry;
+import us.eunoians.mcrpg.skill.experience.rested.RestedExperienceManager;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -58,6 +60,7 @@ public final class McRPGPlayerLoadTask extends PlayerLoadTask {
     @VisibleForTesting
     @Override
     protected boolean loadPlayer() { //TODO completable future?
+        Instant loginTime = Instant.now();
         SkillRegistry skillRegistry = getPlugin().getSkillRegistry();
         AbilityRegistry abilityRegistry = getPlugin().getAbilityRegistry();
         AbilityAttributeManager abilityAttributeManager = getPlugin().getAbilityAttributeManager();
@@ -66,19 +69,8 @@ public final class McRPGPlayerLoadTask extends PlayerLoadTask {
 
         // TODO move this into the skill holder
         try (Connection connection = getPlugin().getDatabase().getConnection()) {
-            // Check if the player has logged in before
-            boolean hasPlayerLoggedInBefore = PlayerLoginTimeDAO.hasPlayerLoggedInBefore(connection, uuid);
-            Instant loginTime = Instant.now();
-            BatchTransaction loginInfoTransaction = new BatchTransaction(connection);
-            if (!hasPlayerLoggedInBefore) {
-                loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveFirstLoginTime(connection, uuid, loginTime));
-            }
-            loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveLastLoginTime(connection, uuid, loginTime));
-            loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveLastSeenTime(connection, uuid, loginTime));
-            // Reset now that they've logged in
-            loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveLoggedOutInSafeZone(connection, uuid, false));
-            loginInfoTransaction.executeTransaction();
 
+            // TODO Do these player manipulations on main thread oop
             for (NamespacedKey skillKey : skillRegistry.getRegisteredSkillKeys()) {
                 Skill skill = skillRegistry.getRegisteredSkill(skillKey);
                 getPlugin().getLogger().log(Level.INFO, "Loading data for skill: " + skillKey.getKey());
@@ -119,9 +111,10 @@ public final class McRPGPlayerLoadTask extends PlayerLoadTask {
             PlayerSettingDAO.getPlayerSettings(connection, uuid).forEach(playerSetting -> getCorePlayer().setPlayerSetting(playerSetting));
             // Experience extras
             getCorePlayer().getExperienceExtras().copyExtras(PlayerExperienceExtrasDAO.getPlayerExperienceExtras(connection, uuid));
+            awardRestedExperience(connection);
+            updatePlayerLoginTimes(connection, loginTime);
             return true;
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
@@ -176,5 +169,44 @@ public final class McRPGPlayerLoadTask extends PlayerLoadTask {
 
     @Override
     protected void onCancel() {
+    }
+
+    /**
+     * Awards players rested experience based on their time offline
+     *
+     * @param connection The {@link Connection} to use when checking player login information.
+     */
+    private void awardRestedExperience(@NotNull Connection connection) {
+        var logoutTimeOptional = PlayerLoginTimeDAO.getLastLogoutTime(connection, getCorePlayer().getUUID());
+        boolean safeZoneLogout = PlayerLoginTimeDAO.didPlayerLogoutInSafeZone(connection, getCorePlayer().getUUID());
+        if (logoutTimeOptional.isPresent()) {
+            Instant logoutTime = logoutTimeOptional.get();
+            Instant now = Instant.now();
+            double difference = Duration.between(now, logoutTime).abs().toSeconds();
+            RestedExperienceManager restedExperienceManager = getPlugin().getRestedExperienceManager();
+            // Award rested experience
+            restedExperienceManager.awardRestedExperience(getCorePlayer(), (int) difference, safeZoneLogout);
+        }
+    }
+
+    /**
+     * Updates the player's log in times.
+     *
+     * @param connection The {@link Connection} to use when saving player login information.
+     * @param loginTime  The {@link Instant} that the player logged in.
+     */
+    private void updatePlayerLoginTimes(@NotNull Connection connection, @NotNull Instant loginTime) {
+        UUID uuid = getCorePlayer().getUUID();
+        // Check if the player has logged in before
+        boolean hasPlayerLoggedInBefore = PlayerLoginTimeDAO.hasPlayerLoggedInBefore(connection, uuid);
+        BatchTransaction loginInfoTransaction = new BatchTransaction(connection);
+        if (!hasPlayerLoggedInBefore) {
+            loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveFirstLoginTime(connection, uuid, loginTime));
+        }
+        loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveLastLoginTime(connection, uuid, loginTime));
+        loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveLastSeenTime(connection, uuid, loginTime));
+        // Reset now that they've logged in
+        loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveLoggedOutInSafeZone(connection, uuid, false));
+        loginInfoTransaction.executeTransaction();
     }
 }
