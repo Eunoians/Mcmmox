@@ -43,6 +43,7 @@ public final class MainConfigFile extends ConfigFile {
     // Rested Experience
     private static final Route RESTED_EXPERIENCE_HEADER = Route.addTo(EXPERIENCE_CONFIGURATION_HEADER, "rested-experience");
     private static final Route SAFE_ZONE_HEADER = Route.addTo(RESTED_EXPERIENCE_HEADER, "safe-zone");
+    private static final Route ONLINE_RESTED_EXPERIENCE_TASK_HEADER = Route.addTo(RESTED_EXPERIENCE_HEADER, "");
     private static final Route SAFE_ZONE_HOOKS_HEADER = Route.addTo(SAFE_ZONE_HEADER, "safe-zone-hooks");
     private static final Route SAFE_ZONE_HOOKS_WORLD_GUARD_HEADER = Route.addTo(SAFE_ZONE_HOOKS_HEADER, "world-guard");
     private static final Route SAFE_ZONE_HOOKS_LANDS_HEADER = Route.addTo(SAFE_ZONE_HOOKS_HEADER, "lands");
@@ -50,6 +51,7 @@ public final class MainConfigFile extends ConfigFile {
     public static final Route RESTED_EXPERIENCE_USAGE_RATE = Route.addTo(RESTED_EXPERIENCE_HEADER, "usage-rate");
     public static final Route RESTED_EXPERIENCE_MAXIMUM_ACCUMULATION = Route.addTo(RESTED_EXPERIENCE_HEADER, "maximum-accumulation");
     public static final Route RESTED_EXPERIENCE_ALLOW_ONLINE_ACCUMULATION = Route.addTo(RESTED_EXPERIENCE_HEADER, "allow-online-accumulation");
+    public static final Route ONLINE_RESTED_EXPERIENCE_TASK_FREQUENCY = Route.addTo(ONLINE_RESTED_EXPERIENCE_TASK_HEADER, "frequency");
     public static final Route SAFE_ZONE_ALLOW_ACCUMULATION = Route.addTo(SAFE_ZONE_HEADER, "allow-safe-zone-accumulation");
     public static final Route SAFE_ZONE_ACCUMULATION_RATE = Route.addTo(SAFE_ZONE_HEADER, "safe-zone-accumulation-rate");
     public static final Route SAFE_ZONE_HOOKS_WORLD_GUARD_ENABLED = Route.addTo(SAFE_ZONE_HOOKS_WORLD_GUARD_HEADER, "enabled");

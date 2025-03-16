@@ -79,6 +79,8 @@ import us.eunoians.mcrpg.skill.SkillRegistry;
 import us.eunoians.mcrpg.skill.experience.ExperienceModifierRegistry;
 import us.eunoians.mcrpg.skill.experience.modifier.HeldItemBonusModifier;
 import us.eunoians.mcrpg.skill.experience.modifier.SpawnReasonModifier;
+import us.eunoians.mcrpg.skill.experience.rested.RestedExperienceManager;
+import us.eunoians.mcrpg.task.experience.RestedExperienceAccumulationTask;
 import us.eunoians.mcrpg.task.player.McRPGPlayerSaveTask;
 import us.eunoians.mcrpg.world.WorldManager;
 import us.eunoians.mcrpg.world.safezone.SafeZoneManager;
@@ -87,6 +89,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * The main class for McRPG where developers should be able to access various components of the API's provided by McRPG
@@ -114,6 +117,7 @@ public class McRPG extends CorePlugin {
     private WorldManager worldManager;
     private SafeZoneManager safeZoneManager;
     private ExperienceModifierRegistry experienceModifierRegistry;
+    private RestedExperienceManager restedExperienceManager;
 
     private GlowingBlocks glowingBlocks;
     private GlowingEntities glowingEntities;
@@ -154,6 +158,7 @@ public class McRPG extends CorePlugin {
         worldManager = new WorldManager(this);
         safeZoneManager = new SafeZoneManager(this);
         experienceModifierRegistry = new ExperienceModifierRegistry(this);
+        restedExperienceManager = new RestedExperienceManager(this);
 
         if (!isUnitTest()) {
             registerNativeExpansions();
@@ -360,7 +365,12 @@ public class McRPG extends CorePlugin {
                     int frequency = yamlDocument.getInt(route);
                     return new McRPGPlayerSaveTask(this, frequency, frequency);
                 }, true);
-        reloadableContentRegistry.trackReloadableContent(saveTask);
+        ReloadableTask<RestedExperienceAccumulationTask> safeZoneUpdateTask = new ReloadableTask<>(fileManager.getFile(FileType.MAIN_CONFIG), MainConfigFile.ONLINE_RESTED_EXPERIENCE_TASK_FREQUENCY,
+                (yamlDocument, route) -> {
+                    int frequency = yamlDocument.getInt(route);
+                    return new RestedExperienceAccumulationTask(this, frequency, frequency);
+                }, false);
+        reloadableContentRegistry.trackReloadableContent(Set.of(saveTask, safeZoneUpdateTask));
     }
 
     /**
@@ -519,6 +529,16 @@ public class McRPG extends CorePlugin {
     @NotNull
     public ExperienceModifierRegistry getExperienceModifierRegistry() {
         return experienceModifierRegistry;
+    }
+
+    /**
+     * Gets the {@link RestedExperienceManager} used by McRPG.
+     *
+     * @return The {@link RestedExperienceManager} used by McRPG.
+     */
+    @NotNull
+    public RestedExperienceManager getRestedExperienceManager() {
+        return restedExperienceManager;
     }
 
     /**

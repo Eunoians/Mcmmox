@@ -46,23 +46,26 @@ public class McRPGPlayer extends CorePlayer {
     private final QuestHolder questHolder;
     private final Map<NamespacedKey, PlayerSetting> playerSettings;
     private final PlayerExperienceExtras playerExperienceExtras;
+    private boolean standingInSafeZone;
 
     public McRPGPlayer(@NotNull Player player, @NotNull McRPG mcRPG) {
         super(player.getUniqueId());
         this.mcRPG = mcRPG;
-        skillHolder = new SkillHolder(mcRPG, getUUID());
-        questHolder = new QuestHolder(getUUID());
-        playerSettings = new HashMap<>();
-        playerExperienceExtras = new PlayerExperienceExtras();
+        this.skillHolder = new SkillHolder(mcRPG, getUUID());
+        this.questHolder = new QuestHolder(getUUID());
+        this.playerSettings = new HashMap<>();
+        this.playerExperienceExtras = new PlayerExperienceExtras();
+        this.standingInSafeZone = false;
     }
 
     public McRPGPlayer(@NotNull UUID uuid, @NotNull McRPG mcRPG) {
         super(uuid);
         this.mcRPG = mcRPG;
-        skillHolder = new SkillHolder(mcRPG, getUUID());
-        questHolder = new QuestHolder(getUUID());
-        playerSettings = new HashMap<>();
-        playerExperienceExtras = new PlayerExperienceExtras();
+        this.skillHolder = new SkillHolder(mcRPG, getUUID());
+        this.questHolder = new QuestHolder(getUUID());
+        this.playerSettings = new HashMap<>();
+        this.playerExperienceExtras = new PlayerExperienceExtras();
+        this.standingInSafeZone = false;
     }
 
     @Override
@@ -195,7 +198,6 @@ public class McRPGPlayer extends CorePlayer {
         quest.startQuest();
     }
 
-
     /**
      * Gets the {@link PlayerExperienceExtras} for this player.
      *
@@ -204,6 +206,30 @@ public class McRPGPlayer extends CorePlayer {
     @NotNull
     public PlayerExperienceExtras getExperienceExtras() {
         return playerExperienceExtras;
+    }
+
+    /**
+     * Updates if the player is currently standing in a safe zone or not.
+     * <p>
+     * This value will not actually be saved to the database, but is meant to serve as a frequently
+     * updated in memory copy.
+     *
+     * @param standingInSafeZone If the player is currently standing in a safe zone or not.
+     */
+    public void setStandingInSafeZone(boolean standingInSafeZone) {
+        this.standingInSafeZone = standingInSafeZone;
+    }
+
+    /**
+     * Checks to see if the player is currently standing in a safe zone or not.
+     * <p>
+     * This value is updated periodically while the player is online. If the player is offline,
+     * then check {@link us.eunoians.mcrpg.database.table.PlayerLoginTimeDAO#didPlayerLogoutInSafeZone(Connection, UUID)}.
+     *
+     * @return {@code true} if the player is currently standing in a safe zone or not.
+     */
+    public boolean isStandingInSafeZone() {
+        return standingInSafeZone;
     }
 
     /**

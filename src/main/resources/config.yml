@@ -51,6 +51,10 @@ configuration:
       # SAFE_ZONE: Only allow rested experience accumulation while online in a safe zone
       # DISABLED: Don't allow accumulation of rested experience while online
       allow-online-accumulation: SAFE_ZONE
+      # Configure the task that will give rested experience while players are online
+      online-accumulator-task:
+        # How often in seconds should the task run
+        frequency: 30
       # Allow for faster accumulation to occur if a player is in a "safe zone"
       safe-zone:
         # Enables safe zone rested experience accumulation

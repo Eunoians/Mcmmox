@@ -18,10 +18,14 @@ import java.util.Optional;
 /**
  * A task used to save and unload the player data
  */
-public class McRPGPlayerUnloadTask extends PlayerUnloadTask {
+public final class McRPGPlayerUnloadTask extends PlayerUnloadTask {
+
+    private final boolean playerLogoutInSafeZone;
 
     public McRPGPlayerUnloadTask(@NotNull McRPG mcRPG, @NotNull McRPGPlayer mcRPGPlayer) {
         super(mcRPG, mcRPGPlayer);
+        // Do this on main thread
+        playerLogoutInSafeZone = mcRPG.getSafeZoneManager().isPlayerInSafeZone(mcRPGPlayer);
     }
 
     @Override
@@ -55,6 +59,7 @@ public class McRPGPlayerUnloadTask extends PlayerUnloadTask {
                 BatchTransaction lastLogoutTransaction = new BatchTransaction(connection);
                 lastLogoutTransaction.addAll(PlayerLoginTimeDAO.saveLastLogoutTime(connection, mcRPGPlayer.getUUID(), logoutTime));
                 lastLogoutTransaction.addAll(PlayerLoginTimeDAO.saveLastSeenTime(connection, mcRPGPlayer.getUUID(), logoutTime));
+                lastLogoutTransaction.addAll(PlayerLoginTimeDAO.saveLoggedOutInSafeZone(connection, mcRPGPlayer.getUUID(), playerLogoutInSafeZone));
                 lastLogoutTransaction.executeTransaction();
                 return true;
             } catch (SQLException e) {

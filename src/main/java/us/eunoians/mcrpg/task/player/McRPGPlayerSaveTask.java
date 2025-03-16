@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  * This task will run continually in the background to save player data
  * on a timer.
  */
-public class McRPGPlayerSaveTask extends CancellableCoreTask {
+public final class McRPGPlayerSaveTask extends CancellableCoreTask {
 
     public McRPGPlayerSaveTask(@NotNull McRPG plugin, double taskDelay, double taskFrequency) {
         super(plugin, taskDelay, taskFrequency);

@@ -38,7 +38,7 @@ import java.util.logging.Level;
  * A {@link PlayerLoadTask} that loads McRPG player data
  */
 //TODO javadoc
-public class McRPGPlayerLoadTask extends PlayerLoadTask {
+public final class McRPGPlayerLoadTask extends PlayerLoadTask {
 
     public McRPGPlayerLoadTask(@NotNull McRPG plugin, @NotNull McRPGPlayer mcRPGPlayer) {
         super(plugin, mcRPGPlayer);
@@ -75,6 +75,8 @@ public class McRPGPlayerLoadTask extends PlayerLoadTask {
             }
             loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveLastLoginTime(connection, uuid, loginTime));
             loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveLastSeenTime(connection, uuid, loginTime));
+            // Reset now that they've logged in
+            loginInfoTransaction.addAll(PlayerLoginTimeDAO.saveLoggedOutInSafeZone(connection, uuid, false));
             loginInfoTransaction.executeTransaction();
 
             for (NamespacedKey skillKey : skillRegistry.getRegisteredSkillKeys()) {

@@ -1,0 +1,61 @@
+package us.eunoians.mcrpg.skill.experience.rested;
+
+import com.diamonddagger590.mccore.configuration.ReloadableParser;
+import com.diamonddagger590.mccore.parser.Parser;
+import org.jetbrains.annotations.NotNull;
+import us.eunoians.mcrpg.McRPG;
+import us.eunoians.mcrpg.configuration.FileType;
+import us.eunoians.mcrpg.configuration.file.MainConfigFile;
+import us.eunoians.mcrpg.entity.player.McRPGPlayer;
+import us.eunoians.mcrpg.entity.player.PlayerExperienceExtras;
+
+import java.util.Set;
+
+/**
+ * This manager handles calculating and awarding rested experience for players.
+ */
+public class RestedExperienceManager {
+
+    private final McRPG mcRPG;
+    private final ReloadableParser normalAccumulationRate;
+    private final ReloadableParser safeZoneAccumulationRate;
+
+    public RestedExperienceManager(@NotNull McRPG plugin) {
+        this.mcRPG = plugin;
+        this.normalAccumulationRate = new ReloadableParser(mcRPG.getFileManager().getFile(FileType.MAIN_CONFIG), MainConfigFile.RESTED_EXPERIENCE_ACCUMULATION_RATE);
+        this.safeZoneAccumulationRate = new ReloadableParser(mcRPG.getFileManager().getFile(FileType.MAIN_CONFIG), MainConfigFile.SAFE_ZONE_ACCUMULATION_RATE);
+        mcRPG.getReloadableContentRegistry().trackReloadableContent(Set.of(normalAccumulationRate, safeZoneAccumulationRate));
+    }
+
+    /**
+     * Gets the amount of rested experience that should be awarded for the period of time provided. The amount
+     * may differ based on if the safe zone or normal equations are used.
+     *
+     * @param timeInSeconds The amount of time in seconds to give rested experience for.
+     * @param safeZone      If the safe zone equation should be used or not.
+     * @return The amount of rested experience that should be awarded for the period of time provided.
+     */
+    public double getRestedExperience(int timeInSeconds, boolean safeZone) {
+        Parser parser = safeZone ? safeZoneAccumulationRate.getContent() : normalAccumulationRate.getContent();
+        parser.setVariable("time", timeInSeconds);
+        return parser.getValue();
+    }
+
+    /**
+     * Awards rested experience to the provided {@link McRPGPlayer}. If the player currently has more rested experience than
+     * the current limit, then this method turns into a no-op.
+     * @param mcRPGPlayer The {@link McRPGPlayer} to award experience to.
+     * @param restedExperience The amount of rested experience to give.
+     */
+    public void awardRestedExperience(@NotNull McRPGPlayer mcRPGPlayer, double restedExperience) {
+        PlayerExperienceExtras playerExperienceExtras = mcRPGPlayer.getExperienceExtras();
+        double currentRestedExperience = playerExperienceExtras.getRestedExperience();
+        double maxAccumulation = mcRPG.getFileManager().getFile(FileType.MAIN_CONFIG).getDouble(MainConfigFile.RESTED_EXPERIENCE_MAXIMUM_ACCUMULATION);
+        // If they have over the limit (theyve accumulated before and the limit got lowered or something), then leave it alone
+        if (currentRestedExperience >= maxAccumulation) {
+            return;
+        }
+        restedExperience = Math.min(playerExperienceExtras.getRestedExperience() + Math.max(0, restedExperience), maxAccumulation);
+        playerExperienceExtras.setRestedExperience((int) restedExperience);
+    }
+}

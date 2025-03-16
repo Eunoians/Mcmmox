@@ -39,10 +39,16 @@ public class PlayerLoginTimeDAO {
 
         /*****
          ** Table Description:
-         ** Contains player data that doesn't have another table to be located
+         ** Contains player login information
          *
          *
          * uuid is the {@link java.util.UUID} of the player being stored
+         * first_login_time is the time that the player first logged in while McRPG was running
+         * last_login_time is the time that the player last logged in while McRPG was running
+         * last_seen_time is the time that the player was last seen while McRPG was running (logged in, logged out or data saved while online)
+         * logged_out_in_safezone checks if the player last logged out in a "safe zone"
+         * last_logout_time is the time that the player last logged out while McRPG was running
+         *
          **
          ** Reasoning for structure:
          ** PK is the `uuid` field, as each player only has one uuid
@@ -53,6 +59,7 @@ public class PlayerLoginTimeDAO {
                 "`first_login_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
                 "`last_login_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
                 "`last_seen_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                "`logged_out_in_safezone` INTEGER NOT NULL DEFAULT 0," +
                 "`last_logout_time` DATETIME," +
                 "PRIMARY KEY (`uuid`)" +
                 ");")) {
@@ -209,6 +216,28 @@ public class PlayerLoginTimeDAO {
     }
 
     /**
+     * Checks to see if the player last logged out in a safe zone.
+     *
+     * @param connection The {@link Connection} to check on.
+     * @param uuid       The {@link UUID} of the player to check.
+     * @return {@code true} if the player last logged out in a safe zone.
+     */
+    public static boolean didPlayerLogoutInSafeZone(@NotNull Connection connection, @NotNull UUID uuid) {
+        boolean loggedOutInSafeZone = false;
+        try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT logged_out_in_safezone FROM " + TABLE_NAME + " WHERE uuid = ?;")) {
+            preparedStatement.setString(1, uuid.toString());
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    loggedOutInSafeZone = resultSet.getBoolean("logged_out_in_safezone");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return loggedOutInSafeZone;
+    }
+
+    /**
      * Saves the {@link Instant} a player first logged into the server while McRPG was running.
      *
      * @param connection     The {@link Connection} to save on.
@@ -289,6 +318,29 @@ public class PlayerLoginTimeDAO {
             PreparedStatement preparedStatement = connection.prepareStatement("REPLACE INTO " + TABLE_NAME + " (uuid, last_seen_time) VALUES (?, ?);");
             preparedStatement.setString(1, uuid.toString());
             preparedStatement.setTimestamp(2, Timestamp.from(lastSeenTime));
+            preparedStatements.add(preparedStatement);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return preparedStatements;
+    }
+
+    /**
+     * Saves if the player logged out in a safe zone.
+     *
+     * @param connection          The {@link Connection} to save on.
+     * @param uuid                The {@link UUID} of the player to save login data for.
+     * @param loggedOutInSafeZone If the player logged out in a safe zone or not.
+     * @return A {@link List} of {@link PreparedStatement}s needed to save if the player logged out
+     * in a safe zone.
+     */
+    @NotNull
+    public static List<PreparedStatement> saveLoggedOutInSafeZone(@NotNull Connection connection, @NotNull UUID uuid, boolean loggedOutInSafeZone) {
+        List<PreparedStatement> preparedStatements = new ArrayList<>();
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("REPLACE INTO " + TABLE_NAME + " (uuid, logged_out_in_safezone) VALUES (?, ?);");
+            preparedStatement.setString(1, uuid.toString());
+            preparedStatement.setBoolean(2, loggedOutInSafeZone);
             preparedStatements.add(preparedStatement);
         } catch (SQLException e) {
             e.printStackTrace();
