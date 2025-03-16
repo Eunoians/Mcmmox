@@ -77,7 +77,9 @@ import us.eunoians.mcrpg.quest.QuestManager;
 import us.eunoians.mcrpg.setting.PlayerSettingRegistry;
 import us.eunoians.mcrpg.skill.SkillRegistry;
 import us.eunoians.mcrpg.skill.experience.ExperienceModifierRegistry;
+import us.eunoians.mcrpg.skill.experience.modifier.BoostedExperienceModifier;
 import us.eunoians.mcrpg.skill.experience.modifier.HeldItemBonusModifier;
+import us.eunoians.mcrpg.skill.experience.modifier.RestedExperienceModifier;
 import us.eunoians.mcrpg.skill.experience.modifier.SpawnReasonModifier;
 import us.eunoians.mcrpg.skill.experience.rested.RestedExperienceManager;
 import us.eunoians.mcrpg.task.experience.RestedExperienceAccumulationTask;
@@ -169,6 +171,7 @@ public class McRPG extends CorePlugin {
             database = new McRPGDatabase(this, DatabaseDriverType.SQLITE);
             registerListeners();
             constructCommands();
+            registerExperienceModifiers();
             registerBackgroundTasks();
             reloadableContentRegistry.reloadAllContent();
         }
@@ -374,11 +377,13 @@ public class McRPG extends CorePlugin {
     }
 
     /**
-     *
+     * Registers all the natively supported {@link us.eunoians.mcrpg.skill.experience.modifier.ExperienceModifier}s.
      */
     private void registerExperienceModifiers() {
         experienceModifierRegistry.registerModifier(new HeldItemBonusModifier());
         experienceModifierRegistry.registerModifier(new SpawnReasonModifier());
+        experienceModifierRegistry.registerModifier(new BoostedExperienceModifier(this));
+        experienceModifierRegistry.registerModifier(new RestedExperienceModifier(this));
     }
 
     /**

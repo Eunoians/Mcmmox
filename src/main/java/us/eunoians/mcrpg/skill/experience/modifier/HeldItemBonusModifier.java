@@ -37,6 +37,7 @@ public final class HeldItemBonusModifier extends ExperienceModifier {
         EntityDamageContext damageContext = (EntityDamageContext) skillExperienceContext;
         HeldItemBonusSkill heldItemBonusSkill = (HeldItemBonusSkill) damageContext.getSkill();
         LivingEntity attacker = (LivingEntity) damageContext.getEvent().getDamager();
+        // This should already be normalized in the skill implementation as it needs to be normalized per held item
         return heldItemBonusSkill.getHeldItemBonus(Objects.requireNonNull(attacker.getEquipment()).getItemInMainHand(), attacker.getEquipment().getItemInOffHand());
     }
 }

@@ -33,7 +33,7 @@ configuration:
     boosted-experience:
       # When a player gains exp, this equation is factored in and if there is remaining boosted exp,
       # then it will add this equation value to the gained amount
-      usage-rate: '((gained_exp)*2.25)'
+      usage-rate: 2.25
     # Rested Experience allows players to passively gain an experience boost.
     # This experience boost is measured in Levels. So as an example, a player might have 1.2 Levels worth of Rested Experience.
     # Rested Experience is relative in terms of how much experience it multiplies as a result.
@@ -43,7 +43,7 @@ configuration:
       # How fast can a player accumulate rested experience. Time is measured in seconds
       accumulation-rate: '0.00027*time'
       # What should the multiplier be when using rested experience?
-      usage-rate: '((gained_exp)*3.0)'
+      usage-rate: 3.0
       # How many levels worth of rested experience can a player have at once
       maximum-accumulation: 1.5
       # This can be ENABLED, SAFE_ZONE, or DISABLED
