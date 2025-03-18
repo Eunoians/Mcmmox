@@ -13,8 +13,10 @@ configuration:
   save-task:
     # This is how often the save task runs in seconds
     frequency: 300
-  # What language file you want to use. Do not include the .yml
-  language-file: en
+  localization:
+    # Language support will go in the order of user's local language -> server default -> english
+    # User local language is determined by their minecraft client
+    server-default-language: en
   # Configure all admin features
   admin:
     # If enabled, admins with the permission node 'mcrpg.ability.spy' will be alerted when abilities are unlocked and upgraded
@@ -22,9 +24,9 @@ configuration:
   # Modify various features for skill experience
   experience:
     # The maximum amount of damage allowed for giving experience. Any damage above this threshold will be ignored when calculating exp to award.
-    max-damage-cap-to-award-exp: 1000000
+    max-damage-cap-to-award-exp: 100
     # The maximum amount of exp multiplier that a player should be able to get from various exp modifiers when combined.
-    exp-multiplier-limit: 5.0
+    exp-multiplier-limit: 10.0
     # How much the experience gain should be modified if the target is blocking with a shield.
     shield-blocking-modifier: 0.5
     # Allows disabling of experience gain when taking damage from ender pearls.

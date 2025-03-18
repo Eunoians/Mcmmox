@@ -8,7 +8,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FileManager {
+/**
+ * Manages all of McRPGs configuration files and is the point of access
+ * to get any {@link YamlDocument}s that hold configuration values.
+ */
+public final class FileManager {
 
     private final McRPG mcRPG;
     private final Map<FileType, YamlDocument> loadedFiles;
@@ -24,12 +28,18 @@ public class FileManager {
         loadFiles();
     }
 
+    /**
+     * Loads all the configuration files for McRPG.
+     */
     private void loadFiles() {
-        for(FileType fileType : FileType.values()) {
+        for (FileType fileType : FileType.values()) {
             loadedFiles.put(fileType, fileType.initializeFile());
         }
     }
 
+    /**
+     * Reloads all the configuration files for McRPG.
+     */
     public void reloadFiles() {
         for (YamlDocument yamlDocument : loadedFiles.values()) {
             try {
@@ -41,6 +51,14 @@ public class FileManager {
         mcRPG.getReloadableContentRegistry().reloadAllContent();
     }
 
+    /**
+     * Gets the {@link YamlDocument} that contains all the configuration information
+     * for the provided {@link FileType}.
+     *
+     * @param fileType The {@link FileType} to get the configuration for.
+     * @return The {@link YamlDocument} that contains all the configuration information for the provided
+     * {@link FileType}.
+     */
     @NotNull
     public YamlDocument getFile(@NotNull FileType fileType) {
         return loadedFiles.get(fileType);

@@ -16,7 +16,7 @@ import java.util.Optional;
 
 /**
  * This setting allows players to require an empty offhand in order to ready their abilities.
- *
+ * <p>
  * This is useful as that way players don't get spammed with notifications as they try to place torches while holding a sword,
  * while still allowing players to disable the feature if they for example, want to hold food on their offhand while using unarmed.
  */

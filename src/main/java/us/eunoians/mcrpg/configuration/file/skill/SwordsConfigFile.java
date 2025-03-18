@@ -13,7 +13,7 @@ import java.util.Set;
 /**
  * Contains all the {@link Route}s used for the swords_configuration.yml
  */
-public class SwordsConfigFile extends AbilityConfigFile {
+public final class SwordsConfigFile extends AbilityConfigFile {
 
     private static final int CURRENT_VERSION = 1;
 

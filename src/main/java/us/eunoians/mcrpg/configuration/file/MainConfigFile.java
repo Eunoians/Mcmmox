@@ -19,14 +19,17 @@ public final class MainConfigFile extends ConfigFile {
     private static final Route LOADOUT_CONFIGURATION_HEADER = Route.addTo(GAMEPLAY_CONFIGURATION_HEADER, "loadout");
     private static final Route MCMMO_CONFIGURATION_HEADER = Route.addTo(CONFIGURATION_HEADER, "mcmmo");
     private static final Route DATABASE_HEADER = Route.addTo(CONFIGURATION_HEADER, "database");
+    private static final Route LOCALIZATION_HEADER = Route.addTo(CONFIGURATION_HEADER, "localization");
 
     // Database fields
     public static final Route DATABASE_DRIVER = Route.addTo(DATABASE_HEADER, "driver");
 
     // General Configuration fields
     public static final Route DISABLED_WORLDS = Route.addTo(CONFIGURATION_HEADER, "disabled-worlds");
-    public static final Route LANGUAGE_FILE = Route.addTo(CONFIGURATION_HEADER, "language-file");
     public static final Route ENABLE_ABILITY_SPY = Route.addTo(ADMIN_CONFIGURATION_HEADER, "enable-ability-spy");
+
+    // Localization
+    public static final Route SERVER_DEFAULT_LOCALE = Route.addTo(LOCALIZATION_HEADER, "server-default-locale");
 
     // Save task fields
     public static final Route SAVE_TASK_FREQUENCY = Route.addTo(SAVE_TASK_HEADER, "frequency");

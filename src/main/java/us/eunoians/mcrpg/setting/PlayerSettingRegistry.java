@@ -17,7 +17,7 @@ import java.util.Set;
  * {@link com.diamonddagger590.mccore.util.LinkedNode}s. This registry provides an easy way
  * to get the first setting for a given node chain.
  */
-public class PlayerSettingRegistry {
+public final class PlayerSettingRegistry {
 
     private final Map<NamespacedKey, PlayerSetting> settings;
 

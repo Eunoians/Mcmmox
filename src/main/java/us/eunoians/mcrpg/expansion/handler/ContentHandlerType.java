@@ -2,6 +2,7 @@ package us.eunoians.mcrpg.expansion.handler;
 
 import org.jetbrains.annotations.NotNull;
 import us.eunoians.mcrpg.expansion.content.AbilityContentPack;
+import us.eunoians.mcrpg.expansion.content.LocalizationContentPack;
 import us.eunoians.mcrpg.expansion.content.PlayerSettingContentPack;
 import us.eunoians.mcrpg.expansion.content.SkillContentPack;
 
@@ -43,7 +44,16 @@ public enum ContentHandlerType {
             return true;
         }
         return false;
-    });
+    }),
+    /**
+     * This processor handles processing {@link LocalizationContentPack}s.
+     */
+    LOCALIZATION(((mcRPG, mcRPGContent) -> {
+        if (mcRPGContent instanceof LocalizationContentPack localizationContent) {
+            localizationContent.getContent().forEach(localization -> mcRPG.getLocalizationManager().registerLanguageFile(localization));
+        }
+        return false;
+    }));
 
     private final ContentPackProcessor contentPackProcessor;
 

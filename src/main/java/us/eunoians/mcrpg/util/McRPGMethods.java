@@ -48,9 +48,6 @@ public class McRPGMethods {
      */
     @NotNull
     public static Parser parseWithPapi(@NotNull Parser parser, @NotNull OfflinePlayer offlinePlayer) {
-        if (McRPG.getInstance().isPapiEnabled()) {
-            return new Parser(PlaceholderAPI.setPlaceholders(offlinePlayer, parser.getInputString()));
-        }
-        return parser;
+        return McRPG.getInstance().getPapiHook().map(papiHook -> new Parser(papiHook.translateMessage(offlinePlayer, parser.getInputString()))).orElse(parser);
     }
 }

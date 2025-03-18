@@ -44,6 +44,7 @@ import us.eunoians.mcrpg.expansion.handler.ContentHandlerType;
 import us.eunoians.mcrpg.external.lands.LandsHook;
 import us.eunoians.mcrpg.external.lunar.LunarUtils;
 import us.eunoians.mcrpg.external.papi.McRPGPapiExpansion;
+import us.eunoians.mcrpg.external.papi.PapiHook;
 import us.eunoians.mcrpg.external.worldguard.WorldGuardHook;
 import us.eunoians.mcrpg.listener.ability.OnAbilityActivateListener;
 import us.eunoians.mcrpg.listener.ability.OnAbilityCooldownExpireListener;
@@ -73,6 +74,7 @@ import us.eunoians.mcrpg.listener.skill.OnAttackLevelListener;
 import us.eunoians.mcrpg.listener.skill.OnBlockBreakLevelListener;
 import us.eunoians.mcrpg.listener.skill.OnSkillLevelUpListener;
 import us.eunoians.mcrpg.listener.world.FakeBlockBreakListener;
+import us.eunoians.mcrpg.localization.LocalizationManager;
 import us.eunoians.mcrpg.quest.QuestManager;
 import us.eunoians.mcrpg.setting.PlayerSettingRegistry;
 import us.eunoians.mcrpg.skill.SkillRegistry;
@@ -120,6 +122,7 @@ public class McRPG extends CorePlugin {
     private SafeZoneManager safeZoneManager;
     private ExperienceModifierRegistry experienceModifierRegistry;
     private RestedExperienceManager restedExperienceManager;
+    private LocalizationManager localizationManager;
 
     private GlowingBlocks glowingBlocks;
     private GlowingEntities glowingEntities;
@@ -136,6 +139,8 @@ public class McRPG extends CorePlugin {
     private LandsHook landsHook;
     @Nullable
     private WorldGuardHook worldGuardHook;
+    @Nullable
+    private PapiHook papiHook;
 
     @Override
     public void onEnable() {
@@ -161,6 +166,7 @@ public class McRPG extends CorePlugin {
         safeZoneManager = new SafeZoneManager(this);
         experienceModifierRegistry = new ExperienceModifierRegistry(this);
         restedExperienceManager = new RestedExperienceManager(this);
+        localizationManager = new LocalizationManager(this);
 
         if (!isUnitTest()) {
             registerNativeExpansions();
@@ -317,9 +323,9 @@ public class McRPG extends CorePlugin {
         }
 
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            papiEnabled = true;
             getLogger().info("Papi PlaceholderAPI found... registering hooks");
             new McRPGPapiExpansion(this).register();
+            papiHook = new PapiHook(this);
         }
 
         if (Bukkit.getPluginManager().isPluginEnabled("NoCheatPlus")) {
@@ -547,6 +553,16 @@ public class McRPG extends CorePlugin {
     }
 
     /**
+     * Gets the {@link LocalizationManager} used by McRPG.
+     *
+     * @return The {@link LocalizationManager} used by McRPG.
+     */
+    @NotNull
+    public LocalizationManager getLocalizationManager() {
+        return localizationManager;
+    }
+
+    /**
      * Checks to see if Lunar Client support is enabled.
      *
      * @return {@code true} if Lunar Client support is enabled
@@ -562,15 +578,6 @@ public class McRPG extends CorePlugin {
      */
     public boolean isGeyserEnabled() {
         return geyserEnabled && Geyser.isRegistered();
-    }
-
-    /**
-     * Checks to see if Papi is enabled.
-     *
-     * @return {@code true} if Papi is enabled.
-     */
-    public boolean isPapiEnabled() {
-        return papiEnabled;
     }
 
     /**
@@ -594,6 +601,17 @@ public class McRPG extends CorePlugin {
     @NotNull
     public Optional<WorldGuardHook> getWorldGuardHook() {
         return Optional.ofNullable(worldGuardHook);
+    }
+
+    /**
+     * Gets the {@link PapiHook} McRPG uses to support PlaceholderAPI.
+     *
+     * @return An {@link Optional} containing the {@link PapiHook} McRPG uses to support
+     * <a href="https://www.spigotmc.org/resources/placeholderapi.6245/">PlaceholderAPI</a> if the plugin is running.
+     */
+    @NotNull
+    public Optional<PapiHook> getPapiHook() {
+        return Optional.ofNullable(papiHook);
     }
 
     /**

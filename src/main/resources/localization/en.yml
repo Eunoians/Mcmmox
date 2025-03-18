@@ -1,0 +1,6 @@
+commands:
+  experience:
+    give-command:
+      recipient-message: "<green>You have been given <gold>%experience%</gold> in <gold>%skill%</gold>."
+      giver-message: "<green>You gave <gold>%experience%</gold> in <gold>%skill%</gold> to %target%."
+      error: "<red>Unable to give <gray>%player%</gray> experience at the moment."
