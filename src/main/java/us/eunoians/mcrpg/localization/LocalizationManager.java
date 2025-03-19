@@ -73,7 +73,20 @@ public final class LocalizationManager {
      *                                                chain that supports the provided route.
      */
     @NotNull
-    public Component getLocalizedMessage(@NotNull McRPGPlayer player, @NotNull Route route) {
+    public Component getLocalizedMessageAsComponent(@NotNull McRPGPlayer player, @NotNull Route route) {
+        return mcRPG.getMiniMessage().deserialize(getLocalizedMessage(player, route));
+    }
+
+    /**
+     * Gets a localized message using the provided {@link Route} to find a translated message.
+     *
+     * @param player The {@link McRPGPlayer} to localize for.
+     * @param route  The {@link Route} to check for a translated message.
+     * @return A localized message using the provided {@link Route} to find a translated message.
+     * @throws NoLocalizationContainsMessageException If there is no localization in the player's locale
+     *                                                chain that supports the provided route.
+     */
+    public String getLocalizedMessage(@NotNull McRPGPlayer player, @NotNull Route route) {
         LinkedNode<Locale> locales = getLocaleChain(player);
         Set<Locale> processedLocales = new HashSet<>();
         while (locales.hasNext()) {
@@ -96,7 +109,7 @@ public final class LocalizationManager {
                         if (papiHookOptional.isPresent() && playerOptional.isPresent()) {
                             message = papiHookOptional.get().translateMessage(playerOptional.get(), message);
                         }
-                        return mcRPG.getMiniMessage().deserialize(message);
+                        return message;
                     }
                 }
             }

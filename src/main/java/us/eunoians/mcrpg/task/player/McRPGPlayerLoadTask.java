@@ -2,7 +2,7 @@ package us.eunoians.mcrpg.task.player;
 
 import com.diamonddagger590.mccore.database.transaction.BatchTransaction;
 import com.diamonddagger590.mccore.task.player.PlayerLoadTask;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.audience.Audience;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -14,6 +14,7 @@ import us.eunoians.mcrpg.ability.attribute.AbilityAttributeManager;
 import us.eunoians.mcrpg.ability.impl.Ability;
 import us.eunoians.mcrpg.configuration.FileType;
 import us.eunoians.mcrpg.configuration.file.MainConfigFile;
+import us.eunoians.mcrpg.configuration.file.localization.EnglishLanguageFile;
 import us.eunoians.mcrpg.database.table.LoadoutAbilityDAO;
 import us.eunoians.mcrpg.database.table.LoadoutDisplayDAO;
 import us.eunoians.mcrpg.database.table.PlayerExperienceExtrasDAO;
@@ -138,12 +139,13 @@ public final class McRPGPlayerLoadTask extends PlayerLoadTask {
     @VisibleForTesting
     @Override
     protected void onPlayerLoadFail() {
-        getPlugin().getLogger().log(Level.SEVERE, ChatColor.RED + "There was an issue loading in the McRPG player data for player with UUID: " + getCorePlayer().getUUID());
+        getPlugin().getLogger().log(Level.SEVERE, "There was an issue loading in the McRPG player data for player with UUID: " + getCorePlayer().getUUID());
 
         Optional<Player> player = getCorePlayer().getAsBukkitPlayer();
 
         if (player.isPresent() && player.get().isOnline()) {
-            player.get().sendMessage(ChatColor.RED + "There was an issue loading your McRPG data, logging back into the server may fix this issue. If that does not fix the issue, please contact a server admin!");
+            Audience audience = getPlugin().getAdventure().player(player.get());
+            audience.sendMessage(getPlugin().getLocalizationManager().getLocalizedMessageAsComponent(getCorePlayer(), EnglishLanguageFile.LOGIN_UNABLE_TO_LOAD_DATA));
         }
     }
 

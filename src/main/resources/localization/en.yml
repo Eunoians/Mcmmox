@@ -2,5 +2,21 @@ commands:
   experience:
     give-command:
       recipient-message: "<green>You have been given <gold>%experience%</gold> in <gold>%skill%</gold>."
-      giver-message: "<green>You gave <gold>%experience%</gold> in <gold>%skill%</gold> to %target%."
-      error: "<red>Unable to give <gray>%player%</gray> experience at the moment."
+      sender-success-message: "<green>You gave <gold>%experience%</gold> in <gold>%skill%</gold> to %target%."
+      sender-error-message: "<red>Unable to give <gray>%player%</gray> experience at the moment."
+login:
+  unable-to-load-data: "<red>There was an issue loading your McRPG data, logging back into the server may fix this issue. If that does not fix the issue, please contact a server admin!"
+ability:
+  cooldown:
+    # Supports %ability% as a placeholder for the ability on cooldown.
+    ability-still-on-cooldown: "<red>%ability% is still on cooldown."
+skill:
+  swords:
+    bleed:
+      display-name: "Bleed"
+      display-material: REDSTONE
+      display-item-model: 0
+      display-item-lore:
+        - ""
+    deeper-wound:
+      display-name: "Deeper Wound"

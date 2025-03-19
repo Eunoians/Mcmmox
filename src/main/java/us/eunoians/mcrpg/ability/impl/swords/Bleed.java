@@ -2,6 +2,7 @@ package us.eunoians.mcrpg.ability.impl.swords;
 
 import com.diamonddagger590.mccore.parser.Parser;
 import dev.dejvokep.boostedyaml.YamlDocument;
+import dev.dejvokep.boostedyaml.route.Route;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -15,12 +16,13 @@ import us.eunoians.mcrpg.ability.McRPGAbility;
 import us.eunoians.mcrpg.ability.impl.ConfigurableAbility;
 import us.eunoians.mcrpg.ability.impl.PassiveAbility;
 import us.eunoians.mcrpg.ability.impl.swords.bleed.BleedComponents;
-import us.eunoians.mcrpg.event.ability.swords.BleedActivateEvent;
 import us.eunoians.mcrpg.configuration.FileType;
+import us.eunoians.mcrpg.configuration.file.localization.EnglishLanguageFile;
 import us.eunoians.mcrpg.configuration.file.skill.SwordsConfigFile;
 import us.eunoians.mcrpg.entity.holder.AbilityHolder;
 import us.eunoians.mcrpg.entity.holder.SkillHolder;
 import us.eunoians.mcrpg.entity.player.McRPGPlayer;
+import us.eunoians.mcrpg.event.ability.swords.BleedActivateEvent;
 import us.eunoians.mcrpg.skill.impl.swords.Swords;
 import us.eunoians.mcrpg.util.McRPGMethods;
 
@@ -71,8 +73,8 @@ public final class Bleed extends McRPGAbility implements PassiveAbility, Configu
 
     @NotNull
     @Override
-    public String getDisplayName() {
-        return "Bleed";
+    public Route getDisplayNameRoute() {
+        return EnglishLanguageFile.BLEED_DISPLAY_NAME;
     }
 
     @NotNull

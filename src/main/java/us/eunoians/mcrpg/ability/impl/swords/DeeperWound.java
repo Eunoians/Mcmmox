@@ -12,6 +12,7 @@ import us.eunoians.mcrpg.McRPG;
 import us.eunoians.mcrpg.ability.McRPGAbility;
 import us.eunoians.mcrpg.ability.impl.ConfigurableTierableAbility;
 import us.eunoians.mcrpg.ability.impl.PassiveAbility;
+import us.eunoians.mcrpg.configuration.file.localization.EnglishLanguageFile;
 import us.eunoians.mcrpg.event.ability.swords.BleedActivateEvent;
 import us.eunoians.mcrpg.event.ability.swords.DeeperWoundActivateEvent;
 import us.eunoians.mcrpg.configuration.FileType;
@@ -58,8 +59,8 @@ public final class DeeperWound extends McRPGAbility implements ConfigurableTiera
 
     @NotNull
     @Override
-    public String getDisplayName() {
-        return "Deeper Wound";
+    public Route getDisplayNameRoute() {
+        return EnglishLanguageFile.DEEPER_WOUND_DISPLAY_NAME;
     }
 
     @Override

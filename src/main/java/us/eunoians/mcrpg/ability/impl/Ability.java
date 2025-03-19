@@ -96,10 +96,11 @@ public interface Ability extends McRPGContent {
     /**
      * Gets the name to display in messages or guis for this ability.
      *
+     * @param player The {@link McRPGPlayer} to get the localized display name for.
      * @return The name to display in messages or guis for this ability.
      */
     @NotNull
-    String getDisplayName();
+    String getDisplayName(@NotNull McRPGPlayer player);
 
     /**
      * Gets the description of this ability to display in guis.
